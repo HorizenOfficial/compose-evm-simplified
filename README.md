@@ -31,13 +31,17 @@ This repo contains all the resources for deploying EVM sidechain on mainnet or t
     ```
 4. Run the following command to stop the stack:
     ```shell
+    ./scripts/stop.sh
+    ```
+5. Run the following command to stop the stack and delete the containers:
+    ```shell
     ./scripts/shutdown.sh
     ```
-5. Run the following command to start the stack after it was stopped:
+6. Run the following command to start the stack after it was stopped:
     ```shell
     ./scripts/startup.sh
     ```
-6. Run the following command to destroy the stack, **this action will delete your wallet and all the data**:
+7. Run the following command to destroy the stack, **this action will delete your wallet and all the data**:
     ```shell
     ./scripts/clean.sh
     ```
