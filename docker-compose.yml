@@ -1,0 +1,77 @@
+version: "3"
+
+volumes:
+  evmapp-data:
+  evmapp-snark-keys:
+
+networks:
+  evmapp_network:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${INTERNAL_NETWORK_SUBNET}
+  inet:
+
+services:
+  evmapp:
+    image: zencash/evmapp:${SC_COMMITTISH_EVMAPP}
+    container_name: evmapp
+    restart: always
+    networks:
+      evmapp_network:
+        ipv4_address: ${SCNODE_IP_ADDRESS}
+      inet:
+    ports:
+      - "${SCNODE_NET_P2P_PORT}:${SCNODE_NET_P2P_PORT}"
+      - "127.0.0.1:${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
+      - "127.0.0.1:${SCNODE_REST_PORT}:${SCNODE_REST_PORT}"
+    volumes:
+      - "evmapp-data:/sidechain/datadir:rw"
+      - "evmapp-snark-keys:/sidechain/snark_keys:rw"
+      - "./logs/evmapp:/sidechain/logs:rw"
+    environment:
+      - "LOCAL_GRP_ID=${SCNODE_GRP_ID}"
+      - "LOCAL_USER_ID=${SCNODE_USER_ID}"
+      - SCNODE_BACKUP_TAR_GZ_URL
+      - SCNODE_CERT_SIGNERS_MAXPKS
+      - SCNODE_CERT_SIGNERS_PUBKEYS
+      - SCNODE_CERT_SIGNERS_SECRETS
+      - SCNODE_CERT_SIGNERS_THRESHOLD
+      - SCNODE_CERT_MASTERS_PUBKEYS
+      - SCNODE_CERT_SIGNING_ENABLED
+      - SCNODE_CERT_SUBMITTER_ENABLED
+      - SCNODE_REMOTE_KEY_MANAGER_ENABLED
+      - SCNODE_REMOTE_KEY_MANAGER_ADDRESS
+      - SCNODE_ALLOWED_FORGERS
+      - SCNODE_FORGER_ENABLED
+      - SCNODE_FORGER_RESTRICT
+      - SCNODE_GENESIS_BLOCKHEX
+      - SCNODE_GENESIS_SCID
+      - SCNODE_GENESIS_POWDATA
+      - SCNODE_GENESIS_MCBLOCKHEIGHT
+      - SCNODE_GENESIS_MCNETWORK
+      - SCNODE_GENESIS_WITHDRAWALEPOCHLENGTH
+      - SCNODE_GENESIS_COMMTREEHASH
+      - SCNODE_GENESIS_ISNONCEASING
+      - SCNODE_NET_KNOWNPEERS
+      - SCNODE_NET_MAGICBYTES
+      - SCNODE_NET_MAX_IN_CONNECTIONS
+      - SCNODE_NET_MAX_OUT_CONNECTIONS
+      - SCNODE_NET_NODENAME
+      - SCNODE_NET_P2P_PORT
+      - SCNODE_NET_API_LIMITER_ENABLED
+      - SCNODE_NET_SLOW_MODE
+      - SCNODE_NET_REBROADCAST_TXS
+      - SCNODE_REST_PORT
+      - SCNODE_WALLET_SEED
+      - SCNODE_WALLET_MAXTX_FEE
+      - SCNODE_WS_SERVER_PORT
+      - SCNODE_WS_CLIENT_ENABLED
+      - SCNODE_WS_SERVER_ENABLED
+      - SCNODE_LOG_FILE_LEVEL
+      - SCNODE_LOG_CONSOLE_LEVEL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "512m"
+        max-file: "4"
