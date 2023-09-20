@@ -13,13 +13,14 @@ This repo contains all the resources for deploying EVM sidechain on mainnet or t
 
 ## Setup
 1. Choose which network to run by moving the .env.template.network.sidechain file into a .env.
+
    To run mainnet EON : 
     ```shell
     cp .env.template.mainnet.eon .env
     ```
    To run testnet Gobi : 
     ```shell
-    cp .env.template.testnet.eon .env
+    cp .env.template.testnet.gobi .env
     ```
 2. Set up environment variables in the .env 
     ```shell
