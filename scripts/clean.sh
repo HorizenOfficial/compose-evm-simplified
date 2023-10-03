@@ -16,6 +16,8 @@ vars_to_check=(
   "CONTAINER_NAME"
   "ROOT_DIR"
   "ENV_FILE"
+  "EVMAPP_DATA_VOL"
+  "EVMAPP_SNARK_KEYS_VOL"
 )
 
 for var in "${vars_to_check[@]}"; do
@@ -49,18 +51,18 @@ else
 fi
 
 # Cleaning up Sidechain node docker volumes if exist
-if docker volume inspect "${compose_project_name}_evmapp-data" &>/dev/null; then
-  echo "" && echo "=== Deleting forger-data volume ===" && echo ""
-  docker volume rm "${compose_project_name}_evmapp-data" || { echo "Error: could not delete ${compose_project_name}_data for some reason. Can not proceed any further.  Exiting ..."; exit 1; }
+if docker volume inspect "${compose_project_name}_${EVMAPP_DATA_VOL}" &>/dev/null; then
+  echo "" && echo "=== Deleting ${EVMAPP_DATA_VOL} volume ===" && echo ""
+  docker volume rm "${compose_project_name}_${EVMAPP_DATA_VOL}" || { echo "Error: could not delete ${compose_project_name}_${EVMAPP_DATA_VOL} for some reason. Can not proceed any further.  Exiting ..."; exit 1; }
 else
-  echo "" && echo "=== ${compose_project_name}_evmapp-data volume does not exist. Nothing to delete ... ===" && echo ""
+  echo "" && echo "=== ${compose_project_name}_${EVMAPP_DATA_VOL} volume does not exist. Nothing to delete ... ===" && echo ""
 fi
 
-if docker volume inspect "${compose_project_name}_evmapp-snark-keys" &>/dev/null; then
-  echo "" && echo "=== Deleting snark-keys volume ===" && echo ""
-  docker volume rm "${compose_project_name}_evmapp-snark-keys" || { echo "Error: could not delete ${compose_project_name}_snark-keys for some reason. Can not proceed any further.  Exiting ..."; exit 1; }
+if docker volume inspect "${compose_project_name}_${EVMAPP_SNARK_KEYS_VOL}" &>/dev/null; then
+  echo "" && echo "=== Deleting ${EVMAPP_SNARK_KEYS_VOL} volume ===" && echo ""
+  docker volume rm "${compose_project_name}_${EVMAPP_SNARK_KEYS_VOL}" || { echo "Error: could not delete ${compose_project_name}_${EVMAPP_SNARK_KEYS_VOL} for some reason. Can not proceed any further.  Exiting ..."; exit 1; }
 else
-  echo "" && echo "=== ${compose_project_name}_evmapp-snark-keys volume does not exist. Nothing to delete ... ===" && echo ""
+  echo "" && echo "=== ${compose_project_name}_${EVMAPP_SNARK_KEYS_VOL} volume does not exist. Nothing to delete ... ===" && echo ""
 fi
 
 # Bring env file back to defaults
