@@ -2,10 +2,12 @@
 # shellcheck disable=SC2120
 ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 CALLER=""
-CONTAINER_NAME='evmapp'
+CONTAINER_NAME="${CONTAINER_NAME:-evmapp}"
+EVMAPP_DATA_VOL="${EVMAPP_DATA_VOL:-evmapp-data}"
+EVMAPP_SNARK_KEYS_VOL="${EVMAPP_SNARK_KEYS_VOL:-evmapp-snark-keys}"
 ENV_FILE='.env'
 
-export ROOT_DIR CALLER CONTAINER_NAME ENV_FILE
+export ROOT_DIR CALLER CONTAINER_NAME ENV_FILE EVMAPP_DATA_VOL EVMAPP_SNARK_KEYS_VOL
 
 # Functions
 fn_die() {
