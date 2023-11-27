@@ -1,3 +1,10 @@
+**1.1.0**
+* SDK dependency updated to version 0.9.0
+* Fork configuration to enable Native<>Real smart contract interoperability
+
+**1.0.1**
+* SDK dependency updated to version 0.8.1
+
 **1.0.0**
 * This release introduces new changes to the network logistics that requires the following steps ONLY for the **UPGRADE** process(not a fresh start).
   1. Stop evmapp 

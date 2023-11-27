@@ -16,7 +16,7 @@ services:
   evmapp:
     image: zencash/evmapp:${SC_COMMITTISH_EVMAPP}
     container_name: evmapp
-    restart: always
+    restart: on-failure:5
     networks:
       evmapp_network:
         ipv4_address: ${SCNODE_IP_ADDRESS}
