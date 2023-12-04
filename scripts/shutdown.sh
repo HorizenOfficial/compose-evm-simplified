@@ -24,8 +24,9 @@ done
 
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
+source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
 scnode_rest_port="$(grep 'SCNODE_REST_PORT=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_REST_PORT value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
-
+select_compose_file
 
 ######
 # Node stop
@@ -37,15 +38,13 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
 
   docker update --restart=no "${CONTAINER_NAME}" &>/dev/null
 
-  $COMPOSE_CMD exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${scnode_rest_port}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
+  $COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${scnode_rest_port}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
   sleep 5
+  $COMPOSE_CMD -f ${compose_file} down
 else
   echo "" && echo "=== ${CONTAINER_NAME} node is not running.  Nothing to stop ... ===" && echo ""
+  $COMPOSE_CMD -f ${compose_file} down
 fi
-
-# Running docker compose down
-$COMPOSE_CMD down
-
 
 ######
 # The END

@@ -6,6 +6,7 @@ CONTAINER_NAME="${CONTAINER_NAME:-evmapp}"
 EVMAPP_DATA_VOL="${EVMAPP_DATA_VOL:-evmapp-data}"
 EVMAPP_SNARK_KEYS_VOL="${EVMAPP_SNARK_KEYS_VOL:-evmapp-snark-keys}"
 ENV_FILE='.env'
+compose_file=""
 
 export ROOT_DIR CALLER CONTAINER_NAME ENV_FILE EVMAPP_DATA_VOL EVMAPP_SNARK_KEYS_VOL
 
@@ -25,6 +26,11 @@ have_docker () {
   command -v docker &> /dev/null || { echo "${FUNCNAME[0]} error: 'docker' is required to run this script, see installation instructions at 'https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository'."; exit 1; }
 }
 
+have_jq () {
+  [ "${1:-}" = "usage" ] && return
+  command -v jq &> /dev/null || { echo "${FUNCNAME[0]} error: 'jq' is required to run this script, install with 'sudo apt-get install jq'."; exit 1; }
+}
+
 have_compose_v2 () {
   [ "${1:-}" = "usage" ] && return
   [ -n "${COMPOSE_CMD:-}" ] && return
@@ -32,6 +38,14 @@ have_compose_v2 () {
   ( docker-compose version 2>&1 | grep -q v2 || docker compose version 2>&1 | grep -q v2 ) || { echo "${FUNCNAME[0]} error: 'docker-compose' or 'docker compose' v2 is required to run this script, see installation instructions at 'https://docs.docker.com/compose/install/other/'."; exit 1; }
   COMPOSE_CMD="$(docker-compose version 2>&1 | grep -q v2 && echo 'docker-compose' || echo 'docker compose')"
   export COMPOSE_CMD
+}
+
+select_compose_file () {
+  if [ ${SCNODE_ROLE:-} = "forger" ]; then
+    compose_file=docker-compose-forger.yml
+  else
+    compose_file=docker-compose-simple.yml
+  fi
 }
 
 check_env_var () {

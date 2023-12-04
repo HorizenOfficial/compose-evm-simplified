@@ -3,7 +3,7 @@ set -eEuo pipefail
 
 scripts_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${scripts_dir}"/utils.sh
-
+compose_file=""
 
 ######
 # Checking all the requirements
@@ -24,10 +24,34 @@ for var in "${vars_to_check[@]}"; do
   export "${var}"
 done
 
+# Setting the Node Role
+env_file_exist "${ROOT_DIR}/${ENV_FILE}"
+# shellcheck disable=SC1090
+source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
+
+if [ -z "${SCNODE_ROLE:-}" ]; then
+  read -rp "Which kind of node would you like to start ? Choose between 'rpc' or 'forger': " SCNODE_ROLE_VALUE
+  SCNODE_ROLE="${SCNODE_ROLE_VALUE}"
+  while [[ ! "${SCNODE_ROLE_VALUE}" =~ ^(rpc|forger)$  ]]; do
+    echo -e "Error: The options have to be 'rpc' or 'forger'. Try again...\n"
+    read -rp "Which kind of node would you like to start ? Choose between 'rpc' or 'forger': " SCNODE_ROLE_VALUE
+    SCNODE_ROLE="${SCNODE_ROLE_VALUE}"
+  done
+  sed -i'' "s/SCNODE_ROLE=/SCNODE_ROLE=${SCNODE_ROLE}/g" ${ROOT_DIR}/${ENV_FILE}
+  if [ ${SCNODE_ROLE} = "forger" ]; then
+    sed -i'' 's/SCNODE_FORGER_ENABLED=/SCNODE_FORGER_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
+    compose_file=docker-compose-forger.yml
+  else
+    sed -i'' 's/SCNODE_FORGER_ENABLED=/SCNODE_FORGER_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
+    compose_file=docker-compose-simple.yml
+  fi
+fi
+
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
 # shellcheck disable=SC1090
 source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
+select_compose_file
 
 # Checking if initialize script has already run
 if [ -n "${SCNODE_WALLET_SEED}" ]; then
@@ -99,15 +123,15 @@ cd "${ROOT_DIR}"
 
 if [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
-  $COMPOSE_CMD up -d
+  $COMPOSE_CMD -f ${compose_file} up -d
 elif [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== ${CONTAINER_NAME} node is already running.  Re-starting ... ===" && echo ""
 
   docker update --restart=no "${CONTAINER_NAME}" &>/dev/null
-  $COMPOSE_CMD exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
+  $COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
   sleep 5
 
-  $COMPOSE_CMD up -d
+  $COMPOSE_CMD -f ${compose_file} up -d
   docker update --restart=always "${CONTAINER_NAME}" &>/dev/null
 fi
 

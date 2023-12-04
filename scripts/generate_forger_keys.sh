@@ -11,6 +11,7 @@ source "${scripts_dir}"/utils.sh
 echo "" && echo "=== Checking all the requirements ===" && echo ""
 have_docker
 have_compose_v2
+have_jq
 
 vars_to_check=(
   "CONTAINER_NAME"
@@ -35,26 +36,20 @@ if [ -z "${scnode_wallet_seed}" ]; then
   fn_die "The stack was not yet initialized. Run init.sh script first. There is nothing to start.  Exiting ..."
 fi
 
+# Generate Vrf Key (forger keys)
+VRF_KEY="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createVrfSecret" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].publicKey)" 
 
-######
-# Node start
-######
-cd "${ROOT_DIR}"
+echo "Generated Vrf public key : ${VRF_KEY}"
+sleep 1 
 
-if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
-  fn_die "${CONTAINER_NAME} node is already running. Nothing to start.  Exiting ..."
-elif [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
-  echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
+# Generate blockSignPublicKey (blockSignPublicKey)
+BLOCK_SIGN_KEY="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].address)"
 
-  $COMPOSE_CMD -f ${compose_file} up -d
-fi
+echo "Generated blockSignPublicKey : ${BLOCK_SIGN_KEY}"
+sleep 1
 
-# Making sure scnode is up and running
-scnode_start_check
+#Generate PrivateKeySecp256k1 (Ethereum compatible address key pair)
+ETH_ADDRESS="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].publicKey)"
 
+echo "Generated Ethereum address : ${ETH_ADDRESS}"
 
-######
-# The END
-######
-echo "" && echo "=== Done ===" && echo ""
-exit 0
