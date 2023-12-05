@@ -3,7 +3,6 @@ set -eEuo pipefail
 
 scripts_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${scripts_dir}"/utils.sh
-compose_file=""
 
 ######
 # Checking all the requirements
@@ -27,23 +26,20 @@ done
 # Setting the Node Role
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
 # shellcheck disable=SC1090
-source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
+SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 
 if [ -z "${SCNODE_ROLE:-}" ]; then
-  read -rp "Which kind of node would you like to start ? Choose between 'rpc' or 'forger': " SCNODE_ROLE_VALUE
-  SCNODE_ROLE="${SCNODE_ROLE_VALUE}"
-  while [[ ! "${SCNODE_ROLE_VALUE}" =~ ^(rpc|forger)$  ]]; do
-    echo -e "Error: The options have to be 'rpc' or 'forger'. Try again...\n"
-    read -rp "Which kind of node would you like to start ? Choose between 'rpc' or 'forger': " SCNODE_ROLE_VALUE
-    SCNODE_ROLE="${SCNODE_ROLE_VALUE}"
+  read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
+  while [[ ! "${scnode_role_value}" =~ ^(rpc|forger)$  ]]; do
+    echo -e ""Error: Node type can only be 'rpc' or 'forger'. Try again...\n""
+    read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
   done
-  sed -i'' "s/SCNODE_ROLE=/SCNODE_ROLE=${SCNODE_ROLE}/g" ${ROOT_DIR}/${ENV_FILE}
-  if [ ${SCNODE_ROLE} = "forger" ]; then
-    sed -i'' 's/SCNODE_FORGER_ENABLED=/SCNODE_FORGER_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
-    compose_file=docker-compose-forger.yml
+  sed -i'' "s/SCNODE_ROLE=.*/SCNODE_ROLE=${scnode_role_value}/g" ${ROOT_DIR}/${ENV_FILE}
+  if [ ${scnode_role_value} == "forger" ]; then
+    sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
+    sed -i'' 's/SCNODE_FORGER_MAXCONNECTIONS=.*/SCNODE_FORGER_MAXCONNECTIONS=20/g' ${ROOT_DIR}/${ENV_FILE}
   else
-    sed -i'' 's/SCNODE_FORGER_ENABLED=/SCNODE_FORGER_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
-    compose_file=docker-compose-simple.yml
+    sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
   fi
 fi
 

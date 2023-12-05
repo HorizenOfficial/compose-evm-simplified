@@ -26,10 +26,10 @@ done
 
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
-source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
+SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 compose_project_name="$(grep 'COMPOSE_PROJECT_NAME=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "COMPOSE_PROJECT_NAME value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 if [ -z "${SCNODE_ROLE:-}" ]; then
-  fn_die "SCNODE_ROLE must be setted in the .env file. Please run init.sh script first or populate all the variables in the .env file"
+  fn_die "SCNODE_ROLE must be set in ${ROOT_DIR}/${ENV_FILE} file. Please run init.sh script first or populate all the variables in ${ROOT_DIR}/${ENV_FILE} file"
 fi
 select_compose_file
 

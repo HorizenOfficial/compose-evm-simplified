@@ -6,6 +6,7 @@ CONTAINER_NAME="${CONTAINER_NAME:-evmapp}"
 EVMAPP_DATA_VOL="${EVMAPP_DATA_VOL:-evmapp-data}"
 EVMAPP_SNARK_KEYS_VOL="${EVMAPP_SNARK_KEYS_VOL:-evmapp-snark-keys}"
 ENV_FILE='.env'
+SCNODE_ROLE="${SCNODE_ROLE:-}"
 compose_file=""
 
 export ROOT_DIR CALLER CONTAINER_NAME ENV_FILE EVMAPP_DATA_VOL EVMAPP_SNARK_KEYS_VOL
@@ -41,7 +42,7 @@ have_compose_v2 () {
 }
 
 select_compose_file () {
-  if [ ${SCNODE_ROLE:-} = "forger" ]; then
+  if [ "${SCNODE_ROLE}" == "forger" ]; then
     compose_file=docker-compose-forger.yml
   else
     compose_file=docker-compose-simple.yml
