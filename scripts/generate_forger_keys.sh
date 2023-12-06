@@ -30,10 +30,15 @@ SCNODE_REST_PORT="$(grep 'SCNODE_REST_PORT=' "${ROOT_DIR}/${ENV_FILE}" | cut -d 
 export SCNODE_REST_PORT
 select_compose_file
 
+# Cheking if the right stack is running 
+if [ "${SCNODE_ROLE}" != "forger" ]; then
+ fn_die "The stack is actually running a ${SCNODE_ROLE} node. You should not generate forger keys if you're not running a forger. Please check your ${ROOT_DIR}/${ENV_FILE} file and eventually re-initialize as forger. Exiting ..." 
+fi
+
 # Checking if init.sh script was executed or not
 scnode_wallet_seed="$(grep 'SCNODE_WALLET_SEED=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_WALLET_SEED value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 if [ -z "${scnode_wallet_seed}" ]; then
-  fn_die "The stack was not yet initialized. The wallet seed has not been populated correctly. Please run init.sh script or check your  "${ROOT_DIR}/${ENV_FILE}" file. Exiting ..."
+  fn_die "The stack was not yet initialized. The wallet seed has not been populated correctly. Please run init.sh script or check your "${ROOT_DIR}/${ENV_FILE}" file. Exiting ..."
 fi
 
 # Checking if the evm node is running 
@@ -53,10 +58,10 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "Generated blockSignPublicKey : ${block_sign_key}"
   sleep 1
 
-  #Generate PrivateKeySecp256k1 (Ethereum compatible address key pair)
+  # Generate PrivateKeySecp256k1 (Ethereum compatible address key pair)
   eth_address="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].publicKey)"
 
   echo "Generated Ethereum address : ${eth_address}"
 else
-  fn_die "=== ${CONTAINER_NAME} node is not running. You need to start ${CONTAINER_NAME} node to be able to generate the keys ==="
+  fn_die "=== ${CONTAINER_NAME} node is not running. Make sure ${CONTAINER_NAME} node is up and running ==="
 fi
