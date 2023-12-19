@@ -31,6 +31,7 @@ This repo contains all the resources for deploying an EVM sidechain Node on main
     ./scripts/init.sh
     ```
     If running for the first time, the script will prompt you to choose the type of node you would like to run (a FORGER or an RPC node).
+    Please look at the "Running a Forger node" section should you want to run a Forger.
 4. Run the following command to stop the stack:
     ```shell
     ./scripts/stop.sh

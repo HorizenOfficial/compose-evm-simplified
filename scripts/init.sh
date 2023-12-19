@@ -38,8 +38,10 @@ if [ -z "${SCNODE_ROLE:-}" ]; then
   if [ ${scnode_role_value} == "forger" ]; then
     sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
     sed -i'' 's/SCNODE_FORGER_MAXCONNECTIONS=.*/SCNODE_FORGER_MAXCONNECTIONS=20/g' ${ROOT_DIR}/${ENV_FILE}
+    sed -i'' 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
   else
     sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
+    sed -i'' 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
   fi
 fi
 
@@ -51,7 +53,7 @@ select_compose_file
 
 # Checking if initialize script has already run
 if [ -n "${SCNODE_WALLET_SEED}" ]; then
-  read -rp "Seems like $(basename "${0}") script has already run. Executing it again will lead to a loss of the current wallet and ${CONTAINER_NAME} node restart if running. Do you still want to proceed (y/n)? " REPLY
+  read -rp "Seems like $(basename "${0}") script has already run. Executing it again will lead to a loss of the current wallet and ${CONTAINER_NAME} node restart if running. Please consider taking a backup of your WALLET SEEDPHRASE before proceeding. Do you still want to proceed (y/n)? " REPLY
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo -e "\nExiting ..."
     exit 1
@@ -59,11 +61,41 @@ if [ -n "${SCNODE_WALLET_SEED}" ]; then
 fi
 
 # Setting NODENADE and WALLET_SEED dynamically
+
+if [ -z "${SCNODE_WALLET_SEED}" ]; then
+  read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
+  while [[ ! "${wallet_seed_answer}" =~ ^(yes|no)$  ]]; do
+    echo -e ""Error: The only allowed answers are 'yes' or 'no'. Try again...\n""
+    read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
+  done
+  if [ ${wallet_seed_answer} == "yes" ]; then
+    read -rp "Please type or paste now the seed phrase you want to import " imported_wallet_seed
+    read -rp "Do you confirm this is the seed phrase you wanna to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
+    while [[ ! "${wallet_seed_answer_2}" =~ ^(yes|no)$  ]]; do
+      echo -e ""Error: The only allowed answers are 'yes' or 'no'. Try again...\n""
+      read -rp "Do you confirm this is the seed phrase you wanna to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
+    done
+    if [ ${wallet_seed_answer_2} == "yes" ]; then
+      SCNODE_WALLET_SEED=${imported_wallet_seed}
+      sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ROOT_DIR}/${ENV_FILE}"
+    else
+     fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..." 
+    fi
+  else
+    SCNODE_WALLET_SEED="$(pwgen 64 1)" || { echo "Error: could not set SCNODE_WALLET_SEED variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
+    echo "" && echo "=== PLEASE SAVE YOUR WALLET SEED PHRASE AND KEEP IT SAFE ===" && echo ""
+    echo "" && echo "Your Seed phrase is : ${SCNODE_WALLET_SEED}" && echo ""
+    read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
+    sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ROOT_DIR}/${ENV_FILE}"
+    while [[ ! "${wallet_seed_answer_3}" =~ ^(yes)$  ]]; do
+      echo -e ""You should safely store your seed phrase. Please try again...\n""
+      read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
+    done
+  fi
+fi
+
 SCNODE_NET_NODENAME="ext-partner-$((RANDOM%100000+1))" || { echo "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
 sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ROOT_DIR}/${ENV_FILE}"
-
-SCNODE_WALLET_SEED="$(pwgen 64 1)" || { echo "Error: could not set SCNODE_WALLET_SEED variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
-sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ROOT_DIR}/${ENV_FILE}"
 
 # Checking all the variables
 to_check=(

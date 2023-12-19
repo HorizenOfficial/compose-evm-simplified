@@ -31,6 +31,7 @@ services:
     volumes:
       - "zen-data:/mnt/zen:rw"
       - "zcash-params:/mnt/zcash-params:rw"
+      - "./scripts/seed.sh:/usr/local/bin/seed.sh:rw"
     environment:
       - "CUSTOM_SCRIPT=${ZEN_CUSTOM_SCRIPT}"
       - "EXTERNAL_IP=${ZEN_EXTERNAL_IP}"

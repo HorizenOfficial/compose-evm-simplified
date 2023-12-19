@@ -32,13 +32,13 @@ select_compose_file
 
 # Cheking if the right stack is running 
 if [ "${SCNODE_ROLE}" != "forger" ]; then
- fn_die "The stack is actually running a ${SCNODE_ROLE} node. You should not generate forger keys if you're not running a forger. Please check your ${ROOT_DIR}/${ENV_FILE} file and eventually re-initialize as forger. Exiting ..." 
+  fn_die "Error: this script is meant to be run for FORGER role only. Your EVMAPP node is currently setup as ${SCNODE_ROLE}. Please check your ${ROOT_DIR}/${ENV_FILE} file and re-initialize as forger if needed. Exiting ..." 
 fi
 
 # Checking if init.sh script was executed or not
 scnode_wallet_seed="$(grep 'SCNODE_WALLET_SEED=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_WALLET_SEED value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 if [ -z "${scnode_wallet_seed}" ]; then
-  fn_die "The stack was not yet initialized. The wallet seed has not been populated correctly. Please run init.sh script or check your "${ROOT_DIR}/${ENV_FILE}" file. Exiting ..."
+  fn_die "Error: your EVMAPP node was not initialized yet and/or the wallet seed has not been generated. Please run 'init.sh' script or check your "${ROOT_DIR}/${ENV_FILE}" file. Exiting ..."
 fi
 
 # Checking if the evm node is running 
@@ -63,5 +63,5 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
 
   echo "Generated Ethereum address : ${eth_address}"
 else
-  fn_die "=== ${CONTAINER_NAME} node is not running. Make sure ${CONTAINER_NAME} node is up and running ==="
+  fn_die "Error: ${CONTAINER_NAME} node is not running. Make sure it is up and running in order to be able to generate FORGER keys. Exiting ..."
 fi
