@@ -24,8 +24,10 @@ done
 
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
+SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 SCNODE_REST_PORT="$(grep 'SCNODE_REST_PORT=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_REST_PORT value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 export SCNODE_REST_PORT
+select_compose_file
 
 # Checking if init.sh script was executed or not
 scnode_wallet_seed="$(grep 'SCNODE_WALLET_SEED=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_WALLET_SEED value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
@@ -44,7 +46,7 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
 elif [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
 
-  $COMPOSE_CMD up -d
+  $COMPOSE_CMD -f ${compose_file} up -d
 fi
 
 # Making sure scnode is up and running

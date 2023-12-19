@@ -4,7 +4,6 @@ set -eEuo pipefail
 scripts_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${scripts_dir}"/utils.sh
 
-
 ######
 # Checking all the requirements
 ######
@@ -27,8 +26,12 @@ done
 
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
+SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 compose_project_name="$(grep 'COMPOSE_PROJECT_NAME=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "COMPOSE_PROJECT_NAME value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
-
+if [ -z "${SCNODE_ROLE:-}" ]; then
+  fn_die "SCNODE_ROLE must be set in ${ROOT_DIR}/${ENV_FILE} file. Please run init.sh script first or populate all the variables in ${ROOT_DIR}/${ENV_FILE} file"
+fi
+select_compose_file
 
 ######
 # Cleanup
@@ -45,7 +48,7 @@ fi
 # Deleting resources
 if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Stopping ${CONTAINER_NAME} node ===" && echo ""
-  $COMPOSE_CMD down
+  $COMPOSE_CMD -f ${compose_file} down
 else
   echo "" && echo "=== ${CONTAINER_NAME} node is not running. Nothing to stop ... ===" && echo ""
 fi
