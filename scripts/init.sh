@@ -61,25 +61,24 @@ if [ -n "${SCNODE_WALLET_SEED}" ]; then
 fi
 
 # Setting NODENADE and WALLET_SEED dynamically
-
 if [ -z "${SCNODE_WALLET_SEED}" ]; then
   read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
   while [[ ! "${wallet_seed_answer}" =~ ^(yes|no)$  ]]; do
-    echo -e ""Error: The only allowed answers are 'yes' or 'no'. Try again...\n""
+    echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
     read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
   done
-  if [ ${wallet_seed_answer} == "yes" ]; then
+  if [ "${wallet_seed_answer}" == "yes" ]; then
     read -rp "Please type or paste now the seed phrase you want to import " imported_wallet_seed
-    read -rp "Do you confirm this is the seed phrase you wanna to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
+    read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
     while [[ ! "${wallet_seed_answer_2}" =~ ^(yes|no)$  ]]; do
-      echo -e ""Error: The only allowed answers are 'yes' or 'no'. Try again...\n""
-      read -rp "Do you confirm this is the seed phrase you wanna to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
+      echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
+      read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
     done
-    if [ ${wallet_seed_answer_2} == "yes" ]; then
-      SCNODE_WALLET_SEED=${imported_wallet_seed}
+    if [ "${wallet_seed_answer_2}" == "yes" ]; then
+      SCNODE_WALLET_SEED="${imported_wallet_seed}"
       sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ROOT_DIR}/${ENV_FILE}"
     else
-     fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..." 
+     fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..."
     fi
   else
     SCNODE_WALLET_SEED="$(pwgen 64 1)" || { echo "Error: could not set SCNODE_WALLET_SEED variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
