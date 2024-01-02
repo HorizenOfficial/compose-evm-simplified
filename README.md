@@ -58,7 +58,7 @@ The evmapp node RPC interfaces will be available over HTTP at:
    curl -sX POST -H 'accept: application/json' -H 'Content-Type: application/json' "http://127.0.0.1:9545/block/best"
    ```
 
-The Ethereum RPC interface is available at /ethv1:
+The Ethereum RPC interface is available at `/ethv1` location:
 - http://localhost:9545/ethv1
 
    For example:
@@ -66,79 +66,80 @@ The Ethereum RPC interface is available at /ethv1:
    curl -sX POST -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":1}' "http://127.0.0.1:9545/ethv1"
    ```
 ## Notes
-The RPC and Websocket ports are only locally exposed (localhost). 
-In order to expose those ports outside the local environment, you can edit lines 26 and 27 of the docker-compose.yml file:
-   Default, only locally exposed:
+The RPC and WebSocket ports are only exposed locally (accessible only via localhost).
+In order to expose those ports outside the local environment, you can edit the following lines in the docker-compose.yml file:
+   
+- Default configuration(locally exposed):
    ```
       - "127.0.0.1:${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
       - "127.0.0.1:${SCNODE_REST_PORT}:${SCNODE_REST_PORT}"
    ```
 
-   Edit in this way in order to expose the ports:
+- Edit the lines in the following way to expose the ports externally:
    ```
       - "${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
       - "${SCNODE_REST_PORT}:${SCNODE_REST_PORT}"
    ```
 
 ## Running a Forger Node 
-If you wish to run a forger node, please choose 'forger' when you run the init.sh script for the first time. Please note that it will take time for both the Mainchain node and the Sidechain node to fully synchronize the entire chains.
+If you intend to run a **forger** node, please select 'forger' when executing the 'init.sh' script for the first time. Keep in mind that both the Mainchain node and the Sidechain node will require some time to fully synchronize the entire chains.
 
-Step by step guide : 
+### Step-by-step guide ### 
 
-1 - During init.sh script run choose 'forger' when prompted. 
-2 - Once the Evm node and the Mainchain node are up&running, run the generate_forger_keys script 
+1. During init.sh script run choose 'forger' when prompted. 
+2. Once the EVM node and the Mainchain node are up and running, run the 'generate_forger_keys.sh' script. 
     ```shell
     ./scripts/generate_forger_keys.sh
     ```
     The script will generate all the necessary keys on the local node and output the following:
     ```shell
-      Forger Key (Generated Vrf public key)
-      blockSignPublicKey (Generated blockSignPublicKey)
-      ethereum compatible address key pair (Generated Ethereum address)
+      Forger Key = VRF public key
+      blockSignPublicKey = blockSignPublicKey
+      ethereum compatible address key pair = Ethereum address
     ```
 
-3 - At this point, in order to stake on EON you should use smart contract to create a Forging Stake using web3js
-    Here is an example (to be run in the Remix IDE) of creating the forging stake with a smart contract interaction:
+3. At this stage, to participate in staking on EON, utilize a smart contract to create a Forging Stake using Web3.js. 
+Below is an example (to be executed in the Remix IDE) demonstrating how to create a forging stake through smart contract interaction:
     ```shell
-(async () => {
-    try {
+        (async () => {
+            try {
+                console.log('Running testWeb3 - Delegate or create a new Forging Stake script...')
 
-        console.log('Running testWeb3 - Delegate or create a new Forging Stake script...')
+                const smartContractAddress = "0x0000000000000000000022222222222222222222";
+                const amount = 0.001; // amount of ZEN of the new stake
+                const accounts = await web3.eth.getAccounts();
+                console.log('Account ' + accounts[0]);
 
-        const smartContractAddress = "0x0000000000000000000022222222222222222222";
-        const amount = 0.001; // amount of ZEN of the new stake
-        const accounts = await web3.eth.getAccounts();
-        console.log('Account ' + accounts[0]);
+                const abi = require("browser/contracts/artifacts/abi_fs.json"); // Change this for different path
 
-        const abi = require("browser/contracts/artifacts/abi_fs.json"); // Change this for different path
+                const contract = new web3.eth.Contract(abi, smartContractAddress, {from: accounts[0]});
 
-        const contract = new web3.eth.Contract(abi, smartContractAddress, {from: accounts[0]});
+                // Testing method:  delegate
+                const ownerAddress = accounts[0];
+                // pick one of the existing forgers, or create a new forger
+                const blockSignPublicKey = "0x" + YOUR_BLOCK_SIGN; // the address that will sign the block when forged; you have to populate this with the value "blockSignPublicKey" you received in the previous step
+                const forgerVrfPublicKey = "0x" + YOUR_VRF_KEY; // this is the key created in the previous step (Forger Keys)
+                const first32BytesForgerVrfPublicKey = forgerVrfPublicKey.substring(0, 66);
+                const lastByteForgerVrfPublicKey = "0x" + forgerVrfPublicKey.substring(66, 68);
 
-        // Testing method:  delegate
-        const ownerAddress = accounts[0];
-        // pick one of the existing forgers, or create a new forger
-        const blockSignPublicKey = "0x" + YOUR_BLOCK_SIGN; // the address that will sign the block when forged; you have to populate this with the value "blockSignPublicKey" you received in the previous step
-        const forgerVrfPublicKey = "0x" + YOUR_VRF_KEY; // this is the key created in the previous step (Forger Keys)
-        const first32BytesForgerVrfPublicKey = forgerVrfPublicKey.substring(0, 66);
-        const lastByteForgerVrfPublicKey = "0x" + forgerVrfPublicKey.substring(66, 68);
+                methodName = 'delegate';
+                console.log('Response for '+ methodName);
 
-        methodName = 'delegate';
-        console.log('Response for '+ methodName);
+                const response = await contract.methods.delegate(blockSignPublicKey,first32BytesForgerVrfPublicKey,lastByteForgerVrfPublicKey,ownerAddress).send({value: amount *10**18}).then(console.log);
 
-        const response = await contract.methods.delegate(blockSignPublicKey,first32BytesForgerVrfPublicKey,lastByteForgerVrfPublicKey,ownerAddress).send({value: amount *10**18}).then(console.log);
+            } catch (e) {
+                console.log("Error:" + e.message);
+            }
+        })();
+    ```
 
-    } catch (e) {
-        console.log("Error:" + e.message);
-    }
-  })()
-        ```
-
-⚠️ Remember to replace YOUR_BLOCK_SIGN and YOUR_VRF_KEY with the actual keys you have generated by running 'generate_forger_keys.sh' script. You will also need to provide a path to the abi contract file location which is not provided here, but is available with the complete Remix workspace.
-⚠️ Notice that this operation involves increasing the voting power of the forger defined by the blockSignPublicKey and forgerVrfKey, and with that the chance to produce blocks. In case of delegation of stake no rewards will be automatically forwarded to you if you are not the owner of both blockSignPublicKey and forgerVrfKey. Ensure ownership before executing the transaction. The transaction is reversible by executing a transaction signed by the ownerAddress.
-Feel free to use Horizen documentation on how to use Remix : https://docs.horizen.io/horizen_eon/develop_and_deploy_smart_contracts/remix
-⚠️ Keep in mind that you will need both nodes (Mainchain and Sidechain) to be fully synced in order to be able to successfully forge a block.
-
-4 - Please keep in mind all the rewards will be received on the local EVM node you're running. You can choose if you want to withdraw the rewards, send them to a different address or import on MetaMask the address in order to view the balance there directly. Please take a look at 
-  a)https://github.com/HorizenOfficial/eon/blob/main/doc/api/wallet/exportSecret.md to eventually export the private key of your wallet and then import it in MetaMask
-  b)https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/sendTransaction.md to send the rewards to a different wallet on EON network
-  c)https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/withdrawCoins.md to send the rewards back on a Mainchain wallet (Horizen Network Network)
+### Script Usage ###
+1. Remember to replace **YOUR_BLOCK_SIGN** and **YOUR_VRF_KEY** with the actual keys you have generated by running 'generate_forger_keys.sh' script.
+2. Specify the path to the ABI contract file, which is not provided here but is available within the complete Remix workspace.
+3. Notice that this operation involves increasing the voting power of the forger defined by the **blockSignPublicKey** and **forgerVrfKey**, and with that the chance to produce blocks.
+4. In case of stake delegation, rewards will not be automatically forwarded unless you are the owner of both **blockSignPublicKey** and **forgerVrfKey**. Ensure ownership before proceeding with the transaction. The transaction can be reversed by executing a transaction signed by the ownerAddress. Feel free to use Horizen documentation on how to use Remix: https://docs.horizen.io/horizen_eon/develop_and_deploy_smart_contracts/remix
+5. Keep in mind that you will need both nodes (Mainchain and Sidechain) to be fully synced in order to be able to successfully forge a block.
+6. Please keep in mind all the rewards will be received on the local EVM node you're running. You can choose if you want to withdraw the rewards, send them to a different address or import on MetaMask address in order to view the balance there directly. Please consider the following documentation:
+   1. Export the private key of your wallet and then import it in MetaMask: https://github.com/HorizenOfficial/eon/blob/main/doc/api/wallet/exportSecret.md
+   2. Send the rewards to a different wallet on EON network: https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/sendTransaction.md
+   3. Send the rewards back to a Mainchain wallet (Horizen Network): https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/withdrawCoins.md
