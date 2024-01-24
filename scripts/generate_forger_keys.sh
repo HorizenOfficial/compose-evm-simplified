@@ -20,7 +20,7 @@ vars_to_check=(
 
 for var in "${vars_to_check[@]}"; do
   check_env_var "${var}"
-  export "${var}"
+  export "${var?}"
 done
 
 # Checking if .env file exist and sourcing
@@ -30,38 +30,47 @@ SCNODE_REST_PORT="$(grep 'SCNODE_REST_PORT=' "${ROOT_DIR}/${ENV_FILE}" | cut -d 
 export SCNODE_REST_PORT
 select_compose_file
 
-# Cheking if the right stack is running 
+# Cheking if the right stack is running
 if [ "${SCNODE_ROLE}" != "forger" ]; then
-  fn_die "Error: this script is meant to be run for FORGER role only. Your EVMAPP node is currently setup as ${SCNODE_ROLE}. Please check your ${ROOT_DIR}/${ENV_FILE} file and re-initialize as forger if needed. Exiting ..." 
+  fn_die "Error: this script is meant to be run for FORGER role only. Your EVMAPP node is currently setup as ${SCNODE_ROLE}. Please check your ${ROOT_DIR}/${ENV_FILE} file and re-initialize as forger if needed. Exiting ..."
 fi
 
 # Checking if init.sh script was executed or not
 scnode_wallet_seed="$(grep 'SCNODE_WALLET_SEED=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_WALLET_SEED value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 if [ -z "${scnode_wallet_seed}" ]; then
-  fn_die "Error: your EVMAPP node was not initialized yet and/or the wallet seed has not been generated. Please run 'init.sh' script or check your "${ROOT_DIR}/${ENV_FILE}" file. Exiting ..."
+  fn_die "Error: your EVMAPP node was not initialized yet and/or the wallet seed has not been generated. Please run 'init.sh' script or check your ${ROOT_DIR}/${ENV_FILE} file. Exiting ..."
 fi
 
-# Checking if the evm node is running 
+# Checking if the evm node is running
 if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "Checking if the node is reachable..."
   scnode_start_check
 
-  # Generate Vrf Key (forger keys)
-  vrf_key="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createVrfSecret" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].publicKey)" 
+  # Generate Vrf Key Pair (forger keys)
+  vrf_pubkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createVrfSecret" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
+  vrf_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${vrf_pubkey}"'"}'| jq -rc '.result.privKey')"
 
-  echo "Generated Vrf public key : ${vrf_key}"
-  sleep 1 
+  echo -e "\nGenerated VRF Key Pair."
+  echo "VRF Public Key         : ${vrf_pubkey}"
+  echo "VRF Private Key        : ${vrf_privkey}"
+  sleep 1
 
-  # Generate blockSignPublicKey (blockSignPublicKey)
-  block_sign_key="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].address)"
+  # Generate blockSign Key Pair (blockSignPublicKey)
+  block_sign_pubkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
+  block_sign_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${block_sign_pubkey}"'"}'| jq -rc '.result.privKey')"
 
-  echo "Generated blockSignPublicKey : ${block_sign_key}"
+  echo -e "\nGenerated Block Sign Key Pair."
+  echo "Block Sign Public Key  : ${block_sign_pubkey}"
+  echo "Block Sign Private Key : ${block_sign_privkey}"
   sleep 1
 
   # Generate PrivateKeySecp256k1 (Ethereum compatible address key pair)
-  eth_address="$($COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq .result[].publicKey)"
+  eth_address="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].address')"
+  eth_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${eth_address}"'"}'| jq -rc '.result.privKey')"
 
-  echo "Generated Ethereum address : ${eth_address}"
+  echo -e "\nGenerated Ethereum Address Key Pair."
+  echo "Ethereum Address       : 0x${eth_address}"
+  echo "Ethereum Private Key   : ${eth_privkey}"
 else
   fn_die "Error: ${CONTAINER_NAME} node is not running. Make sure it is up and running in order to be able to generate FORGER keys. Exiting ..."
 fi
