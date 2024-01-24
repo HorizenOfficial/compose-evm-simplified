@@ -63,9 +63,9 @@ services:
       inet:
     expose:
       - "${SCNODE_REST_PORT}"
+      - "${SCNODE_WS_SERVER_PORT}"
     ports:
       - "${SCNODE_NET_P2P_PORT}:${SCNODE_NET_P2P_PORT}"
-      - "${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
     volumes:
       - "evmapp-data:/sidechain/datadir:rw"
       - "evmapp-snark-keys:/sidechain/snark_keys:rw"

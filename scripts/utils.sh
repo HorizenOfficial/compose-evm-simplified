@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2120
 ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 CALLER=""
 CONTAINER_NAME="${CONTAINER_NAME:-evmapp}"
@@ -7,7 +6,7 @@ EVMAPP_DATA_VOL="${EVMAPP_DATA_VOL:-evmapp-data}"
 EVMAPP_SNARK_KEYS_VOL="${EVMAPP_SNARK_KEYS_VOL:-evmapp-snark-keys}"
 ENV_FILE='.env'
 SCNODE_ROLE="${SCNODE_ROLE:-}"
-compose_file=""
+compose_file="docker-compose-simple.yml"
 
 export ROOT_DIR CALLER CONTAINER_NAME ENV_FILE EVMAPP_DATA_VOL EVMAPP_SNARK_KEYS_VOL
 
@@ -18,23 +17,21 @@ fn_die() {
 }
 
 have_pwgen () {
-  [ "${1:-}" = "usage" ] && return
   command -v pwgen &> /dev/null || { echo "${FUNCNAME[0]} error: 'pwgen' is required to run this script, install with 'sudo apt-get install pwgen'."; exit 1; }
 }
 
+# shellcheck disable=SC2120
 have_docker () {
-  [ "${1:-}" = "usage" ] && return
   command -v docker &> /dev/null || { echo "${FUNCNAME[0]} error: 'docker' is required to run this script, see installation instructions at 'https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository'."; exit 1; }
 }
 
 have_jq () {
-  [ "${1:-}" = "usage" ] && return
   command -v jq &> /dev/null || { echo "${FUNCNAME[0]} error: 'jq' is required to run this script, install with 'sudo apt-get install jq'."; exit 1; }
 }
 
 have_compose_v2 () {
-  [ "${1:-}" = "usage" ] && return
   [ -n "${COMPOSE_CMD:-}" ] && return
+  # shellcheck disable=SC2119
   have_docker
   ( docker-compose version 2>&1 | grep -q v2 || docker compose version 2>&1 | grep -q v2 ) || { echo "${FUNCNAME[0]} error: 'docker-compose' or 'docker compose' v2 is required to run this script, see installation instructions at 'https://docs.docker.com/compose/install/other/'."; exit 1; }
   COMPOSE_CMD="$(docker-compose version 2>&1 | grep -q v2 && echo 'docker-compose' || echo 'docker compose')"
@@ -43,9 +40,8 @@ have_compose_v2 () {
 
 select_compose_file () {
   if [ "${SCNODE_ROLE}" == "forger" ]; then
-    compose_file=docker-compose-forger.yml
-  else
-    compose_file=docker-compose-simple.yml
+    # shellcheck disable=SC2034
+    compose_file="docker-compose-forger.yml"
   fi
 }
 

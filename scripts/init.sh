@@ -8,8 +8,11 @@ source "${scripts_dir}"/utils.sh
 # Checking all the requirements
 ######
 echo "" && echo "=== Checking all the requirements ===" && echo ""
+# shellcheck disable=SC2119
 have_docker
+# shellcheck disable=SC2119
 have_compose_v2
+# shellcheck disable=SC2119
 have_pwgen
 
 vars_to_check=(
@@ -20,34 +23,37 @@ vars_to_check=(
 
 for var in "${vars_to_check[@]}"; do
   check_env_var "${var}"
-  export "${var}"
+  export "${var?}"
 done
+
+# BSD sed?
+sed_i=("-i")
+[ "$(uname)" = "Darwin" ] && sed_i=("-i ''")
 
 # Setting the Node Role
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
-# shellcheck disable=SC1090
 SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
 
 if [ -z "${SCNODE_ROLE:-}" ]; then
   read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
   while [[ ! "${scnode_role_value}" =~ ^(rpc|forger)$  ]]; do
-    echo -e ""Error: Node type can only be 'rpc' or 'forger'. Try again...\n""
+    echo -e "Error: Node type can only be 'rpc' or 'forger'. Try again...\n"
     read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
   done
-  sed -i'' "s/SCNODE_ROLE=.*/SCNODE_ROLE=${scnode_role_value}/g" ${ROOT_DIR}/${ENV_FILE}
-  if [ ${scnode_role_value} == "forger" ]; then
-    sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
-    sed -i'' 's/SCNODE_FORGER_MAXCONNECTIONS=.*/SCNODE_FORGER_MAXCONNECTIONS=20/g' ${ROOT_DIR}/${ENV_FILE}
-    sed -i'' 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=true/g' ${ROOT_DIR}/${ENV_FILE}
+  sed "${sed_i[@]}" "s/SCNODE_ROLE=.*/SCNODE_ROLE=${scnode_role_value}/g" "${ROOT_DIR}/${ENV_FILE}"
+  if [ "${scnode_role_value}" = "forger" ]; then
+    sed "${sed_i[@]}" 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=true/g' "${ROOT_DIR}/${ENV_FILE}"
+    sed "${sed_i[@]}" 's/SCNODE_FORGER_MAXCONNECTIONS=.*/SCNODE_FORGER_MAXCONNECTIONS=20/g' "${ROOT_DIR}/${ENV_FILE}"
+    sed "${sed_i[@]}" 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=true/g' "${ROOT_DIR}/${ENV_FILE}"
   else
-    sed -i'' 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
-    sed -i'' 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=false/g' ${ROOT_DIR}/${ENV_FILE}
+    sed "${sed_i[@]}" 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=false/g' "${ROOT_DIR}/${ENV_FILE}"
+    sed "${sed_i[@]}" 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=false/g' "${ROOT_DIR}/${ENV_FILE}"
   fi
 fi
 
 # Checking if .env file exist and sourcing
 env_file_exist "${ROOT_DIR}/${ENV_FILE}"
-# shellcheck disable=SC1090
+# shellcheck source=../.env.template.mainnet.eon
 source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
 select_compose_file
 
@@ -67,16 +73,16 @@ if [ -z "${SCNODE_WALLET_SEED}" ]; then
     echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
     read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
   done
-  if [ "${wallet_seed_answer}" == "yes" ]; then
+  if [ "${wallet_seed_answer}" = "yes" ]; then
     read -rp "Please type or paste now the seed phrase you want to import " imported_wallet_seed
     read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
     while [[ ! "${wallet_seed_answer_2}" =~ ^(yes|no)$  ]]; do
       echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
       read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
     done
-    if [ "${wallet_seed_answer_2}" == "yes" ]; then
+    if [ "${wallet_seed_answer_2}" = "yes" ]; then
       SCNODE_WALLET_SEED="${imported_wallet_seed}"
-      sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ROOT_DIR}/${ENV_FILE}"
+      sed "${sed_i[@]}" "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ROOT_DIR}/${ENV_FILE}"
     else
      fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..."
     fi
@@ -85,16 +91,16 @@ if [ -z "${SCNODE_WALLET_SEED}" ]; then
     echo "" && echo "=== PLEASE SAVE YOUR WALLET SEED PHRASE AND KEEP IT SAFE ===" && echo ""
     echo "" && echo "Your Seed phrase is : ${SCNODE_WALLET_SEED}" && echo ""
     read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
-    sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ROOT_DIR}/${ENV_FILE}"
+    sed "${sed_i[@]}" "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ROOT_DIR}/${ENV_FILE}"
     while [[ ! "${wallet_seed_answer_3}" =~ ^(yes)$  ]]; do
-      echo -e ""You should safely store your seed phrase. Please try again...\n""
+      echo -e "You should safely store your seed phrase. Please try again...\n"
       read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
     done
   fi
 fi
 
 SCNODE_NET_NODENAME="ext-partner-$((RANDOM%100000+1))" || { echo "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
-sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ROOT_DIR}/${ENV_FILE}"
+sed "${sed_i[@]}" "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ROOT_DIR}/${ENV_FILE}"
 
 # Checking all the variables
 to_check=(

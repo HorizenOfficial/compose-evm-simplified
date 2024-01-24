@@ -21,7 +21,7 @@ vars_to_check=(
 
 for var in "${vars_to_check[@]}"; do
   check_env_var "${var}"
-  export "${var}"
+  export "${var?}"
 done
 
 # Checking if .env file exist and sourcing
@@ -32,6 +32,10 @@ if [ -z "${SCNODE_ROLE:-}" ]; then
   fn_die "SCNODE_ROLE must be set in ${ROOT_DIR}/${ENV_FILE} file. Please run init.sh script first or populate all the variables in ${ROOT_DIR}/${ENV_FILE} file"
 fi
 select_compose_file
+
+# BSD sed?
+sed_i=("-i")
+[ "$(uname)" = "Darwin" ] && sed_i=("-i ''")
 
 ######
 # Cleanup
@@ -69,8 +73,8 @@ else
 fi
 
 # Bring env file back to defaults
-sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=/g" "${ROOT_DIR}/${ENV_FILE}"
-sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=/g" "${ROOT_DIR}/${ENV_FILE}"
+sed "${sed_i[@]}" "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=/g" "${ROOT_DIR}/${ENV_FILE}"
+sed "${sed_i[@]}" "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=/g" "${ROOT_DIR}/${ENV_FILE}"
 
 
 ######

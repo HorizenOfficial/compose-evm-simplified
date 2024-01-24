@@ -19,7 +19,7 @@ vars_to_check=(
 
 for var in "${vars_to_check[@]}"; do
   check_env_var "${var}"
-  export "${var}"
+  export "${var?}"
 done
 
 # Checking if .env file exist and sourcing
