@@ -1,5 +1,9 @@
 # Changelog
 
+**1.2.1**
+* SDK dependency updated to version 0.10.1
+* [eth RPC endpoint] fix on json representation in RPC response of signature V field for transaction type 2.
+
 **1.2.0**
 * SDK dependency updated to version 0.10.0 (see [SDK changelog](https://github.com/HorizenOfficial/Sidechains-SDK/blob/master/CHANGELOG.md))
 * Fork configuration to enable new functionalities (ZenIP 42203/42206 support, ZenDao Multisig support)
