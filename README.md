@@ -31,22 +31,19 @@ This repo contains all the resources for deploying an EVM sidechain Node on main
     ./scripts/init.sh
     ```
     If running for the first time, the script will prompt you to choose the type of node you would like to run (a FORGER or an RPC node).
-    Please look at the "Running a Forger node" section should you want to run a Forger.
+    Please look at the "Running a Forger node" section should you want to run a Forger. 
+    
+    Initialization may take a considerable amount of time as it synchronizes the Horizen (ZEN) blockchain and e.g. evmapp cointainer may
+    not start within 15 minutes as zend is yet syncing. (Issue e.g. `docker compose -f docker-compose-forger.yml logs -ft --tail=10` to 
+    see what's going on.)
+   
 4. Run the following command to stop the stack:
     ```shell
     ./scripts/stop.sh
     ```
-5. Run the following command to stop the stack and delete the containers:
-    ```shell
-    ./scripts/shutdown.sh
-    ```
-6. Run the following command to start the stack after it was stopped:
+5. Run the following command to start the stack after it was stopped:
     ```shell
     ./scripts/startup.sh
-    ```
-7. Run the following command to destroy the stack, **this action will delete your wallet and all the data**:
-    ```shell
-    ./scripts/clean.sh
     ```
 
 ## Usage
@@ -87,7 +84,7 @@ If you intend to run a **forger** node, please select 'forger' when executing th
 ### Step-by-step guide ### 
 
 1. During init.sh script run choose 'forger' when prompted. 
-2. Once the EVM node and the Mainchain node are up and running, run the 'generate_forger_keys.sh' script. 
+2. Once the EVM node ("evmapp" container) and the Mainchain node ("zend" container) are up and running, run the 'generate_forger_keys.sh' script. 
     ```shell
     ./scripts/generate_forger_keys.sh
     ```
@@ -151,3 +148,14 @@ Below is an example (to be executed in the Remix IDE) demonstrating how to creat
    1. Export the private key of your wallet and then import it in MetaMask: https://github.com/HorizenOfficial/eon/blob/main/doc/api/wallet/exportSecret.md
    2. Send the rewards to a different wallet on EON network: https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/sendTransaction.md
    3. Send the rewards back to a Mainchain wallet (Horizen Network): https://github.com/HorizenOfficial/eon/blob/main/doc/api/transaction/withdrawCoins.md
+
+## Other useful docker commands
+- Run the following command to stop the stack and delete the containers:
+    ```shell
+    ./scripts/shutdown.sh
+    ```
+- Run the following command to destroy the stack, **this action will delete your wallet and all the data**:
+    ```shell
+    ./scripts/clean.sh
+    ```
+    
