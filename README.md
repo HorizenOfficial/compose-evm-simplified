@@ -84,7 +84,7 @@ If you intend to run a **forger** node, please select 'forger' when executing th
 ### Step-by-step guide ### 
 
 1. During init.sh script run choose 'forger' when prompted. 
-2. Once the EVM node (evmapp) and the Mainchain node (zend) are up and running, run the 'generate_forger_keys.sh' script. 
+2. Once the EVM node ("evmapp" container) and the Mainchain node ("zend" container) are up and running, run the 'generate_forger_keys.sh' script. 
     ```shell
     ./scripts/generate_forger_keys.sh
     ```
