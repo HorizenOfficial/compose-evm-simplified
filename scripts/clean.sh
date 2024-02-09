@@ -52,7 +52,7 @@ fi
 # Deleting resources
 if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Stopping ${CONTAINER_NAME} node ===" && echo ""
-  $COMPOSE_CMD -f ${compose_file} down
+  $COMPOSE_CMD -f "${COMPOSE_FILE}" down
 else
   echo "" && echo "=== ${CONTAINER_NAME} node is not running. Nothing to stop ... ===" && echo ""
 fi

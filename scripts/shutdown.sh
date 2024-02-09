@@ -38,12 +38,12 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
 
   docker update --restart=no "${CONTAINER_NAME}" &>/dev/null
 
-  $COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${scnode_rest_port}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
+  $COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${scnode_rest_port}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
   sleep 5
-  $COMPOSE_CMD -f ${compose_file} down
+  $COMPOSE_CMD -f "${COMPOSE_FILE}" down
 else
   echo "" && echo "=== ${CONTAINER_NAME} node is not running.  Nothing to stop ... ===" && echo ""
-  $COMPOSE_CMD -f ${compose_file} down
+  $COMPOSE_CMD -f "${COMPOSE_FILE}" down
 fi
 
 ######

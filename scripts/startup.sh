@@ -46,7 +46,7 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
 elif [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
 
-  $COMPOSE_CMD -f ${compose_file} up -d
+  $COMPOSE_CMD -f "${COMPOSE_FILE}" up -d
 fi
 
 # Making sure scnode is up and running
