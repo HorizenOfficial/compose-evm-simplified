@@ -47,8 +47,8 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   scnode_start_check
 
   # Generate Vrf Key Pair (forger keys)
-  vrf_pubkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createVrfSecret" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
-  vrf_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${vrf_pubkey}"'"}'| jq -rc '.result.privKey')"
+  vrf_pubkey="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createVrfSecret" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
+  vrf_privkey="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${vrf_pubkey}"'"}'| jq -rc '.result.privKey')"
 
   echo -e "\nGenerated VRF Key Pair."
   echo "VRF Public Key         : ${vrf_pubkey}"
@@ -56,8 +56,8 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   sleep 1
 
   # Generate blockSign Key Pair (blockSignPublicKey)
-  block_sign_pubkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
-  block_sign_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${block_sign_pubkey}"'"}'| jq -rc '.result.privKey')"
+  block_sign_pubkey="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKey25519" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].publicKey')"
+  block_sign_privkey="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${block_sign_pubkey}"'"}'| jq -rc '.result.privKey')"
 
   echo -e "\nGenerated Block Sign Key Pair."
   echo "Block Sign Public Key  : ${block_sign_pubkey}"
@@ -65,8 +65,8 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   sleep 1
 
   # Generate PrivateKeySecp256k1 (Ethereum compatible address key pair)
-  eth_address="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].address')"
-  eth_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${eth_address}"'"}'| jq -rc '.result.privKey')"
+  eth_address="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].address')"
+  eth_privkey="$($COMPOSE_CMD -f "${COMPOSE_FILE}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${eth_address}"'"}'| jq -rc '.result.privKey')"
 
   # Remove first two digits of the private key and concat 0x to the beginning
   eth_privkey_metamask="0x${eth_privkey:2}"

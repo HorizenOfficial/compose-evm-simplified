@@ -156,15 +156,15 @@ cd "${ROOT_DIR}"
 
 if [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
-  $COMPOSE_CMD -f ${compose_file} up -d
+  $COMPOSE_CMD -f ${COMPOSE_FILE} up -d
 elif [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   echo "" && echo "=== ${CONTAINER_NAME} node is already running.  Re-starting ... ===" && echo ""
 
   docker update --restart=no "${CONTAINER_NAME}" &>/dev/null
-  $COMPOSE_CMD -f ${compose_file} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
+  $COMPOSE_CMD -f ${COMPOSE_FILE} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
   sleep 5
 
-  $COMPOSE_CMD -f ${compose_file} up -d
+  $COMPOSE_CMD -f ${COMPOSE_FILE} up -d
   docker update --restart=always "${CONTAINER_NAME}" &>/dev/null
 fi
 
