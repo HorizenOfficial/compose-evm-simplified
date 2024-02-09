@@ -68,9 +68,13 @@ if [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
   eth_address="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/createPrivateKeySecp256k1" -H "accept: application/json" -H 'Content-Type: application/json' | jq -rc '.result[].address')"
   eth_privkey="$($COMPOSE_CMD -f "${compose_file}" exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/exportSecret" -H "accept: application/json" -H 'Content-Type: application/json' -d '{"publickey": "'"${eth_address}"'"}'| jq -rc '.result.privKey')"
 
+  # Remove first two digits of the private key and concat 0x to the beginning
+  eth_privkey_metamask="0x${eth_privkey:2}"
+
   echo -e "\nGenerated Ethereum Address Key Pair."
-  echo "Ethereum Address       : 0x${eth_address}"
-  echo "Ethereum Private Key   : ${eth_privkey}"
+  echo "Ethereum Address                    : 0x${eth_address}"
+  echo "Ethereum Private Key                : ${eth_privkey}"
+  echo "Ethereum Private Key for MetaMask   : ${eth_privkey_metamask}"
 else
   fn_die "Error: ${CONTAINER_NAME} node is not running. Make sure it is up and running in order to be able to generate FORGER keys. Exiting ..."
 fi
