@@ -1,8 +1,11 @@
-version: "3"
+version: "3.7"
+name: "${COMPOSE_PROJECT_NAME}"
 
 volumes:
   evmapp-data:
   evmapp-snark-keys:
+  zen-data:
+  zcash-params:
 
 networks:
   evmapp_network:
@@ -13,23 +16,67 @@ networks:
   inet:
 
 services:
-  evmapp:
-    image: zencash/evmapp:${SC_COMMITTISH_EVMAPP}
-    container_name: evmapp
-    restart: on-failure:5
+  zend:
+    image: "zencash/zen-node:${ZEND_TAG}"
+    container_name: "${ZEND_CONTAINER_NAME:-zend}"
+    restart: always
+    stop_grace_period: 10m
     networks:
       evmapp_network:
-        ipv4_address: ${SCNODE_IP_ADDRESS}
+        ipv4_address: ${ZEND_IP_ADDRESS}
       inet:
     ports:
+      - "${ZEN_PORT}:${ZEN_PORT}"
+    expose:
+      - "${ZEN_RPC_PORT}"
+      - "${ZEN_WS_PORT}"
+    volumes:
+      - "zen-data:/mnt/zen:rw"
+      - "zcash-params:/mnt/zcash-params:rw"
+      - "./scripts/seed.sh:/usr/local/bin/seed.sh:rw"
+    environment:
+      - "CUSTOM_SCRIPT=${ZEN_CUSTOM_SCRIPT}"
+      - "EXTERNAL_IP=${ZEN_EXTERNAL_IP}"
+      - "LOCAL_GRP_ID=${ZEN_LOCAL_GRP_ID}"
+      - "LOCAL_USER_ID=${ZEN_LOCAL_USER_ID}"
+      - "LOG=${ZEN_LOG}"
+      - "OPTS=${ZEN_OPTS}"
+      - "PORT=${ZEN_PORT}"
+      - "RPC_ALLOWIP_PRESET=${ZEN_RPC_ALLOWIP_PRESET}"
+      - "RPC_USER=${ZEN_RPC_USER}"
+      - "RPC_PASSWORD=${ZEN_RPC_PASSWORD}"
+      - "RPC_PORT=${ZEN_RPC_PORT}"
+      - "SEED_TAR_GZ_URL=${ZEN_SEED_TAR_GZ_URL}"
+      - "USE_SEED_FILE=${ZEN_USE_SEED_FILE}"
+      - "FORCE_RESEED=${ZEN_FORCE_RESEED}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "512m"
+        max-file: "4"
+
+  evmapp:
+    image: "zencash/evmapp:${EVMAPP_TAG}"
+    container_name: "${EVMAPP_CONTAINER_NAME:-evmapp}"
+    restart: always
+    stop_grace_period: 10m
+    networks:
+      evmapp_network:
+        ipv4_address: ${EVMAPP_IP_ADDRESS}
+      inet:
+    expose:
+      - "${SCNODE_REST_PORT}"
+      - "${SCNODE_WS_SERVER_PORT}"
+    ports:
       - "${SCNODE_NET_P2P_PORT}:${SCNODE_NET_P2P_PORT}"
-      - "127.0.0.1:${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
-      - "127.0.0.1:${SCNODE_REST_PORT}:${SCNODE_REST_PORT}"
     volumes:
       - "evmapp-data:/sidechain/datadir:rw"
       - "evmapp-snark-keys:/sidechain/snark_keys:rw"
       - "./logs/evmapp:/sidechain/logs:rw"
     environment:
+      - "RPC_USER=${ZEN_RPC_USER}"
+      - "RPC_PASSWORD=${ZEN_RPC_PASSWORD}"
+      - "RPC_PORT=${ZEN_RPC_PORT}"
       - "LOCAL_GRP_ID=${SCNODE_GRP_ID}"
       - "LOCAL_USER_ID=${SCNODE_USER_ID}"
       - SCNODE_BACKUP_TAR_GZ_URL
@@ -41,7 +88,6 @@ services:
       - SCNODE_CERT_SIGNING_ENABLED
       - SCNODE_CERT_SUBMITTER_ENABLED
       - SCNODE_REMOTE_KEY_MANAGER_ENABLED
-      - SCNODE_REMOTE_KEY_MANAGER_ADDRESS
       - SCNODE_ALLOWED_FORGERS
       - SCNODE_FORGER_ENABLED
       - SCNODE_FORGER_RESTRICT
@@ -63,9 +109,14 @@ services:
       - SCNODE_NET_SLOW_MODE
       - SCNODE_NET_REBROADCAST_TXS
       - SCNODE_NET_HANDLING_TXS
+      - SCNODE_FORGER_MAXCONNECTIONS
+      - SCNODE_ONLY_CONNECT_TO_KNOWN_PEERS
       - SCNODE_REST_PORT
-      - SCNODE_WALLET_SEED
+      - SCNODE_WALLET_GENESIS_SECRETS
       - SCNODE_WALLET_MAXTX_FEE
+      - SCNODE_WALLET_SEED
+      - SCNODE_WS_ZEN_FQDN
+      - "SCNODE_WS_ZEN_PORT=${ZEN_WS_PORT}"
       - SCNODE_WS_SERVER_PORT
       - SCNODE_WS_CLIENT_ENABLED
       - SCNODE_WS_SERVER_ENABLED
