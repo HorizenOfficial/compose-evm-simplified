@@ -13,6 +13,10 @@ deployment_dir="$(readlink -f "${script_dir}/../")"
 seed_dir="${deployment_dir}/seed"
 env_file="${deployment_dir}/.env"
 
+if [ -f "${env_file}" ]; then
+  echo "'${env_file}' does not exist, please run init.sh script before running this script."
+  exit 1
+fi
 # shellcheck source=../.env
 source "${env_file}"
 
@@ -57,7 +61,7 @@ if [ "${seed_dir_available_space_bytes}" -ge ${total_size} ]; then
     --allow-overwrite=true \
     --download-result=full \
     --summary-interval=10 \
-    "${remote_file}" | tee -a "${seed_dir}/seed.log" ||
+    "${remote_file}" 2>&1 | tee -a "${seed_dir}/seed.log" ||
     {
       echo -e "\nResume failed, downloading $filename from scratch.\n" | tee -a "${seed_dir}/seed.log" &&
         aria2c \
@@ -71,12 +75,12 @@ if [ "${seed_dir_available_space_bytes}" -ge ${total_size} ]; then
           --allow-overwrite=true \
           --download-result=full \
           --summary-interval=10 \
-          "${remote_file}" | tee -a "${seed_dir}/seed.log"
+          "${remote_file}" 2>&1 | tee -a "${seed_dir}/seed.log"
     }
 
   echo "Extracting seed file..." | tee -a "${seed_dir}/seed.log"
 
-  tar -xzf "${seed_dir}/${filename}" -C "${seed_dir}" | tee -a "${seed_dir}/seed.log"
+  tar -xzf "${seed_dir}/${filename}" -C "${seed_dir}" 2>&1 | tee -a "${seed_dir}/seed.log"
 
   echo "Seed file extraction succeeded." | tee -a "${seed_dir}/seed.log"
 
@@ -95,7 +99,7 @@ else
     rm -rf "${seed_dir}/blocks"/*
     rm -rf "${seed_dir}/chainstate"/*
 
-    if ! curl -L "${remote_file}" | tar -xzf - -C "${seed_dir}" | tee -a "${seed_dir}/seed.log"; then
+    if ! curl -L "${remote_file}" | tar -xzf - -C "${seed_dir}" 2>&1 | tee -a "${seed_dir}/seed.log"; then
       echo "Seed file extraction failed on attempt $i" | tee -a "${seed_dir}/seed.log"
       if ((i == retries)); then
         echo "Error: all seed file extraction attempts failed. Removing directories and exiting." | tee -a "${seed_dir}/seed.log"
