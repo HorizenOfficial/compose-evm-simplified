@@ -2,7 +2,8 @@
 
 set -eEuo pipefail
 
-ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR="$(readlink -f "${script_dir}/../..")"
 source "${ROOT_DIR}"/scripts/utils.sh
 
 echo -e "\n\033[1m=== Checking all the requirements ===\033[0m"
@@ -69,6 +70,8 @@ if [ -n "$(docker ps -q -f status=running -f name="${EVMAPP_CONTAINER_NAME}")" ]
   echo "Ethereum Address                    : 0x${eth_address}"
   echo "Ethereum Private Key                : ${eth_privkey}"
   echo "Ethereum Private Key for MetaMask   : ${eth_privkey_metamask}"
+
+  echo -e "\n\033[1m=== STORE ALL THESE VALUES IN A SAFE PLACE ===\033[0m"
 else
   fn_die "Error: ${EVMAPP_CONTAINER_NAME} node is not running. Make sure it is up and running in order to be able to generate FORGER keys. Exiting ..."
 fi

@@ -8,23 +8,17 @@ fn_die() {
 
 verify_required_commands() {
 
-  command -v pwgen &>/dev/null || fn_die "${FUNCNAME[0]} error: 'pwgen' is required to run this script, install with 'sudo apt-get install pwgen'."
+  command -v pwgen &>/dev/null || fn_die "${FUNCNAME[0]} Error: 'pwgen' is required to run this script, install with 'sudo apt-get install pwgen' or 'brew install pwgen'."
 
-  command -v jq &>/dev/null || fn_die "${FUNCNAME[0]} error: 'jq' is required to run this script, install with 'sudo apt-get install jq'."
+  command -v jq &>/dev/null || fn_die "${FUNCNAME[0]} Error: 'jq' is required to run this script, see installation instructions at 'https://jqlang.github.io/jq/download/'."
 
-  command -v docker &>/dev/null || fn_die "${FUNCNAME[0]} error: 'docker' is required to run this script, see installation instructions at 'https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository'."
+  command -v docker &>/dev/null || fn_die "${FUNCNAME[0]} Error: 'docker' is required to run this script, see installation instructions at 'https://docs.docker.com/engine/install/'."
 
-  (docker-compose version 2>&1 | grep -q v2 || docker compose version 2>&1 | grep -q v2) || fn_die "${FUNCNAME[0]} error: 'docker-compose' or 'docker compose' v2 is required to run this script, see installation instructions at 'https://docs.docker.com/compose/install/other/'."
+  (docker compose version 2>&1 | grep -q v2) || fn_die "${FUNCNAME[0]} Error: 'docker compose' v2 is required to run this script, see installation instructions at 'https://docs.docker.com/compose/install/'."
 
   if [ "$(uname)" = "Darwin" ]; then
-    command -v gsed &>/dev/null || fn_die "${FUNCNAME[0]} error: 'gnu-sed' is required to run this script in MacOS environment, see installation instructions at 'https://formulae.brew.sh/formula/gnu-sed'. Make sure to add it to your PATH."
+    command -v gsed &>/dev/null || fn_die "${FUNCNAME[0]} Error: 'gnu-sed' is required to run this script in MacOS environment, see installation instructions at 'https://formulae.brew.sh/formula/gnu-sed'. Make sure to add it to your PATH."
   fi
-}
-
-set_compose_command() {
-  [ -n "${COMPOSE_CMD:-}" ] && return
-  COMPOSE_CMD="$(docker-compose version 2>&1 | grep -q v2 && echo 'docker compose' || echo 'docker-compose')"
-  echo "${COMPOSE_CMD}"
 }
 
 check_env_var() {

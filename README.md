@@ -1,10 +1,8 @@
 # Compose EVM Simplified
 
-This repository contains all the resources for deploying an EVM sidechain Node on mainnet or testnet. It can create either rpc nodes or forger nodes.
+This repository contains all the resources for deploying a forger or rpc EVM sidechain node on mainnet or testnet.
 
 ## Requirements
-
---- 
 
 * docker
 * docker compose v2
@@ -12,14 +10,14 @@ This repository contains all the resources for deploying an EVM sidechain Node o
 * pwgen
 * gnu-sed for Darwin distributions
 
-## Deployment 
+---
 
---- 
+## Deployment
 
 1. [Rpc node](./docs/RPC.md)
 2. [Forger node](./docs/FORGER.md)
 
-
+---
 
 
 

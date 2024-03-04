@@ -1,3 +1,4 @@
+version: "3.7"
 name: "${COMPOSE_PROJECT_NAME}"
 
 volumes:
@@ -9,7 +10,7 @@ networks:
     internal: true
     ipam:
       config:
-        - subnet: ${INTERNAL_NETWORK_SUBNET}
+        - subnet: "${INTERNAL_NETWORK_SUBNET}"
   inet:
 
 services:

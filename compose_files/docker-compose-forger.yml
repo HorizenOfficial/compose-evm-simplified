@@ -12,7 +12,7 @@ networks:
     internal: true
     ipam:
       config:
-        - subnet: ${INTERNAL_NETWORK_SUBNET}
+        - subnet: "${INTERNAL_NETWORK_SUBNET}"
   inet:
 
 services:
@@ -23,7 +23,7 @@ services:
     stop_grace_period: 10m
     networks:
       evmapp_network:
-        ipv4_address: ${ZEND_IP_ADDRESS}
+        ipv4_address: "${ZEND_IP_ADDRESS}"
       inet:
     ports:
       - "${ZEN_PORT}:${ZEN_PORT}"
@@ -31,8 +31,9 @@ services:
       - "${ZEN_RPC_PORT}"
       - "${ZEN_WS_PORT}"
     volumes:
-      - "zen-data:/mnt/zen:rw"
       - "zcash-params:/mnt/zcash-params:rw"
+      - "zen-data:/mnt/zen:rw"
+      - "./seed:/mnt/zen/seed:rw"
       - "./scripts/seed.sh:/usr/local/bin/seed.sh:rw"
     environment:
       - "CUSTOM_SCRIPT=${ZEN_CUSTOM_SCRIPT}"
@@ -46,8 +47,6 @@ services:
       - "RPC_USER=${ZEN_RPC_USER}"
       - "RPC_PASSWORD=${ZEN_RPC_PASSWORD}"
       - "RPC_PORT=${ZEN_RPC_PORT}"
-      - "SEED_TAR_GZ_URL=${ZEN_SEED_TAR_GZ_URL}"
-      - "USE_SEED_FILE=${ZEN_USE_SEED_FILE}"
       - "FORCE_RESEED=${ZEN_FORCE_RESEED}"
     logging:
       driver: "json-file"

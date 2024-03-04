@@ -2,8 +2,6 @@
 
 ## Setup
 
---- 
-
 Run the init.sh script to initialize the deployment for the first time. Select **forger** node and the **network** to run (eon or gobi).
 
 ```shell
@@ -12,44 +10,57 @@ Run the init.sh script to initialize the deployment for the first time. Select *
 
 The script will generate the required deployment files under the [deployments](../deployments) directory and provide instructions on how to run the compose stack.
 
-## Zend seed
-
 --- 
 
-As this is a forger node, it requires a zend node to run as well. Syncing a zend node from scratch may take a few hours, 
-so a seed file can be used to speed up the process.
 
-There are two variables that help controlling the seed process for the zend node:
+## Zend seed
 
-- `ZEN_USE_SEED_FILE`: The default value for this variable is `false`, but it can be set to true choosing to use the seed file in the init.sh script.
+A forger node requires a zend node to be running as well. Syncing a zend node from scratch may take a few hours,
+therefore a seed file can be used to speed up the process.
 
-- `ZEN_FORCE_RESEED`: This variable is set to `false` by default, but it can be set manually to `true` if forcing the reseed of the zend node is required.
+On start up, the zend node will run the [seed.sh](../scripts/forger/seed/seed.sh) script to check if the seed process is required.
 
-Once the zend node has been synced, the following times the stack is started there is no need to seed the zend node again.
+The script will be run if the following conditions are met:
 
-The _seed.sh_ script will generate a **.seed.complete** file in the node's data folder, and it will prevent the seed script to be run again.
+- If **blocks** and **chainstate** directories exists in the **seed** directory and are not empty, the script will attempt to run the seed process.
+- If **blocks** or **chainstate** directories or the **.seed.complete** file exist in the node's datadir, the seed process will not be run.
+- If `ZEN_FORCE_RESEED` is set to `true` in the `deployments/forger/[eon|gobi]/.env` file, the seed process will be run regardless of the previous condition 
+(this will remove the **.seed.complete** file and **blocks** and **chainstate** directories, and force the seed process to be run)
 
-Additionally, setting the `ZEN_USE_SEED_FILE` variable to false in the .env file will prevent the seed process to be run again.
+Once the seed process has been run successfully at least once a **.seed.complete** file will be created in the seed directory to prevent the seed process to be run again.
 
-If migrating from previous versions of these project and your zend node is already synced set the `ZEN_USE_SEED_FILE` variable to false in the .env file.
+The **blocks** and **chainstate** directories can be added to the `deployments/forger/[eon|gobi]/seed` directory either manually or running the [download_seed.sh](../scripts/forger/seed/download_seed.sh) script.
+This directory will be mounted into the zend container and used to seed the node.
 
-If reseed of the zend node is required, set the `ZEN_FORCE_RESEED` variable to true in the .env file, and restart the stack.
+### Manually
+
+- Find the seed file url in `deployments/forger/[eon|gobi]/.env` file under the `ZEN_SEED_TAR_GZ_URL` variable.
+- Download the seed file and extract it into the `deployments/forger/[eon|gobi]/seed` directory.
+
+### Using the download_seed.sh script
+
+- Run the following command to download and extract the seed file into `deployments/forger/[eon|gobi]/seed` directory:
+    ```shell
+    ./deployments/forger/[eon|gobi]/scripts/download_seed.sh
+    ```
+  
+--- 
+
 
 ## Running the stack
 
---- 
-
 1. Prerequisites
-    - Storage: A minimum of 250GB of free space is required to run both nodes. Keep in mind that the storage requirements will grow over time.
+    - Storage: A minimum of **250 GB** of free space is required to run evmapp and zend nodes in mainnet and around **25 GB** in testnet. 
+   Keep in mind that the storage requirements will grow over time.
 
 2. Run the zend node and let it sync (only required the first time the stack is started):
    ```shell
     cd deployments/forger/[eon|gobi] && docker compose up -d zend
     ```
 
-3. Verify if the zend node is fully synced you can run the following command and compare the output with the current block height in the mainchain: https://explorer.horizen.io or https://explorer-testnet.horizen.io:
+3. Verify if zend node is fully synced by running the following command and comparing the output with the current block height in the mainchain: https://explorer.horizen.io or https://explorer-testnet.horizen.io:
     ```shell
-    docker exec ${ZEND_CONTAINER_NAME} gosu user curl -s --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockcount\", \"params\": [] }' -H 'content-type: text/plain;' -u ${ZEN_RPC_USER]}:${ZEN_RPC_PASSWORD} http://127.0.0.1:${ZEN_RPC_PORT}/
+    docker exec ${ZEND_CONTAINER_NAME} gosu user curl -s --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params": [] }' -H 'content-type: text/plain;' -u ${ZEN_RPC_USER]}:${ZEN_RPC_PASSWORD} http://127.0.0.1:${ZEN_RPC_PORT}/
     ```
 
 4. Once the zend node is fully synced, run the evmapp node:
@@ -77,16 +88,24 @@ If reseed of the zend node is required, set the `ZEN_FORCE_RESEED` variable to t
       Ethereum Private Key                : ...
       Ethereum Private Key for MetaMask  : ...
     ```
-   **STORE THESE VALUES IN A SAFE PLACE. THESE VALUES WILL BE REQUIRED IN THE STAKING PROCESS**
 
-   Verify that the keys were generated correctly, run the following command:
+6. **STORE THESE VALUES IN A SAFE PLACE. THESE VALUES WILL BE REQUIRED IN THE STAKING PROCESS**
+
+7. Verify that the keys were generated correctly by running the following command:
     ```shell
     docker exec ${EVMAPP_CONTAINER_NAME} gosu user curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/allPublicKeys"  -H "accept: application/json" -H 'Content-Type: application/json' -d '{}'
     ```
 
-## Other useful docker commands
+8. **IMPORTANT NOTE**
+- The address  **_"Generated Ethereum Address Key Pair"_** is where rewards will go to. 
+- Rewards are paid to the first ETH address in the wallet of the Forger Node. 
+- **We recommend to not delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
+- Stakes should be delegated from web3 wallets like MetaMask. 
+- You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
 
 --- 
+
+## Other useful docker commands
 
 - Run the following command to stop the stack:
     ```shell
@@ -107,9 +126,10 @@ If reseed of the zend node is required, set the `ZEN_FORCE_RESEED` variable to t
     docker volume rm [volume_name] # Remove the volumes related to your stack, these volumes are named after the stack name: [COMPOSE_PROJECT_NAME]_[volume-name]
     ```
 
+---
 
 ## Staking
 
----
-
 To participate in staking on EON, use the [eon-smart-contract-tools](https://github.com/HorizenOfficial/eon-smart-contract-tools) to create a Forging Stake using Web3.js.
+
+---
