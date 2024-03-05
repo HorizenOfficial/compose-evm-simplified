@@ -1,184 +1,143 @@
 #!/bin/bash
+
 set -eEuo pipefail
 
-scripts_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source "${scripts_dir}"/utils.sh
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)"
+source "${ROOT_DIR}"/scripts/utils.sh
 
-######
-# Checking all the requirements
-######
-echo "" && echo "=== Checking all the requirements ===" && echo ""
-# shellcheck disable=SC2119
-have_docker
-# shellcheck disable=SC2119
-have_compose_v2
-# shellcheck disable=SC2119
-have_pwgen
+echo -e "\n\033[1m=== Checking all the requirements ===\033[0m"
 
-vars_to_check=(
-  "CONTAINER_NAME"
-  "ROOT_DIR"
-  "ENV_FILE"
-)
+verify_required_commands
 
-for var in "${vars_to_check[@]}"; do
-  check_env_var "${var}"
-  export "${var?}"
+echo -e "\n\033[1mWhat kind of node type would you like to run: \033[0m"
+select role_value in rpc forger; do
+  if [ -n "${role_value}" ]; then
+    echo -e "\nYou have selected: \033[1m${role_value}\033[0m"
+    break
+  else
+    echo -e "\n\033[1mInvalid selection. Please type 1, or 2.\033[0m\n"
+  fi
 done
 
-# BSD sed?
-sed_i=("-i")
-[ "$(uname)" = "Darwin" ] && sed_i=("-i ''")
-
-# Setting the Node Role
-env_file_exist "${ROOT_DIR}/${ENV_FILE}"
-SCNODE_ROLE="$(grep 'SCNODE_ROLE=' "${ROOT_DIR}/${ENV_FILE}" | cut -d '=' -f2)" || { echo "SCNODE_ROLE value is wrong. Check ${ROOT_DIR}/${ENV_FILE} file"; exit 1; }
-
-if [ -z "${SCNODE_ROLE:-}" ]; then
-  read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
-  while [[ ! "${scnode_role_value}" =~ ^(rpc|forger)$  ]]; do
-    echo -e "Error: Node type can only be 'rpc' or 'forger'. Try again...\n"
-    read -rp "What kind of node type would you like to run('rpc' or 'forger'): " scnode_role_value
-  done
-  sed "${sed_i[@]}" "s/SCNODE_ROLE=.*/SCNODE_ROLE=${scnode_role_value}/g" "${ROOT_DIR}/${ENV_FILE}"
-  if [ "${scnode_role_value}" = "forger" ]; then
-    sed "${sed_i[@]}" 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=true/g' "${ROOT_DIR}/${ENV_FILE}"
-    sed "${sed_i[@]}" 's/SCNODE_FORGER_MAXCONNECTIONS=.*/SCNODE_FORGER_MAXCONNECTIONS=20/g' "${ROOT_DIR}/${ENV_FILE}"
-    sed "${sed_i[@]}" 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=true/g' "${ROOT_DIR}/${ENV_FILE}"
+echo -e "\n\033[1mWhat network would you like to setup 'eon' (mainnet) or 'gobi' (testnet): \033[0m"
+select network_value in eon gobi; do
+  if [ -n "${network_value}" ]; then
+    echo -e "\nYou have selected: \033[1m${network_value}\033[0m"
+    break
   else
-    sed "${sed_i[@]}" 's/SCNODE_FORGER_ENABLED=.*/SCNODE_FORGER_ENABLED=false/g' "${ROOT_DIR}/${ENV_FILE}"
-    sed "${sed_i[@]}" 's/SCNODE_WS_CLIENT_ENABLED=.*/SCNODE_WS_CLIENT_ENABLED=false/g' "${ROOT_DIR}/${ENV_FILE}"
+    echo -e "\n\033[1mInvalid selection. Please type 1, or 2.\033[0m\n"
   fi
-fi
+done
 
-# Checking if .env file exist and sourcing
-env_file_exist "${ROOT_DIR}/${ENV_FILE}"
-# shellcheck source=../.env.template.mainnet.eon
-source "${ROOT_DIR}/${ENV_FILE}" || { echo "Error: could not source ${ROOT_DIR}/${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."; exit 1; }
-select_compose_file
+echo -e "\n\033[1m=== Preparing deployment directory ./${role_value}/${network_value} ===\033[0m"
+DEPLOYMENT_DIR="${ROOT_DIR}/deployments/${role_value}/${network_value}"
+mkdir -p "${DEPLOYMENT_DIR}" || fn_die "Error: could not create deployment directory. Fix it before proceeding any further.  Exiting..."
 
-# Checking if initialize script has already run
-if [ -n "${SCNODE_WALLET_SEED}" ]; then
-  read -rp "Seems like $(basename "${0}") script has already run. Executing it again will lead to a loss of the current wallet and ${CONTAINER_NAME} node restart if running. Please consider taking a backup of your WALLET SEEDPHRASE before proceeding. Do you still want to proceed (y/n)? " REPLY
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "\nExiting ..."
-    exit 1
-  fi
-fi
+echo -e "\n\033[1m=== Creating .env file ===\033[0m"
+ENV_FILE_TEMPLATE="${ROOT_DIR}/env/.env.${role_value}.${network_value}.template"
+ENV_FILE="${DEPLOYMENT_DIR}/.env"
 
-# Setting NODENADE and WALLET_SEED dynamically
-if [ -z "${SCNODE_WALLET_SEED}" ]; then
-  read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
-  while [[ ! "${wallet_seed_answer}" =~ ^(yes|no)$  ]]; do
-    echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
+if ! [ -f "${ENV_FILE}" ]; then
+  cp "${ENV_FILE_TEMPLATE}" "${ENV_FILE}"
+  # shellcheck source=../.env.forger.eon
+  source "${ENV_FILE}" || fn_die "Error: could not source ${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."
+
+  # Setting SCNODE_NET_NODENAME and SCNODE_WALLET_SEED dynamically
+  if [ -z "${SCNODE_WALLET_SEED}" ]; then
+    echo -e "\n\033[1m=== Setting up the wallet seed phrase ===\033[0m\n"
     read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
-  done
-  if [ "${wallet_seed_answer}" = "yes" ]; then
-    read -rp "Please type or paste now the seed phrase you want to import " imported_wallet_seed
-    read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
-    while [[ ! "${wallet_seed_answer_2}" =~ ^(yes|no)$  ]]; do
-      echo -e "Error: The only allowed answers are 'yes' or 'no'. Try again...\n"
-      read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no')" wallet_seed_answer_2
+    while [[ ! "${wallet_seed_answer}" =~ ^(yes|no)$ ]]; do
+      echo -e "\nError: The only allowed answers are 'yes' or 'no'. Try again...\n"
+      read -rp "Do you want to import an already existing seed phrase for your wallet ? ('yes' or 'no') " wallet_seed_answer
     done
-    if [ "${wallet_seed_answer_2}" = "yes" ]; then
-      SCNODE_WALLET_SEED="${imported_wallet_seed}"
-      sed "${sed_i[@]}" "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ROOT_DIR}/${ENV_FILE}"
+    if [ "${wallet_seed_answer}" = "yes" ]; then
+      read -rp "Please type or paste now the seed phrase you want to import: " imported_wallet_seed
+      read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no') " wallet_seed_answer_2
+      while [[ ! "${wallet_seed_answer_2}" =~ ^(yes|no)$ ]]; do
+        echo -e "\nError: The only allowed answers are 'yes' or 'no'. Try again...\n"
+        read -rp "Do you confirm this is the seed phrase you want to import : ${imported_wallet_seed} ? ('yes' or 'no') " wallet_seed_answer_2
+      done
+      if [ "${wallet_seed_answer_2}" = "yes" ]; then
+        SCNODE_WALLET_SEED="${imported_wallet_seed}"
+        sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ENV_FILE}"
+      else
+        fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..."
+      fi
     else
-     fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..."
-    fi
-  else
-    SCNODE_WALLET_SEED="$(pwgen 64 1)" || { echo "Error: could not set SCNODE_WALLET_SEED variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
-    echo "" && echo "=== PLEASE SAVE YOUR WALLET SEED PHRASE AND KEEP IT SAFE ===" && echo ""
-    echo "" && echo "Your Seed phrase is : ${SCNODE_WALLET_SEED}" && echo ""
-    read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
-    sed "${sed_i[@]}" "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ROOT_DIR}/${ENV_FILE}"
-    while [[ ! "${wallet_seed_answer_3}" =~ ^(yes)$  ]]; do
-      echo -e "You should safely store your seed phrase. Please try again...\n"
+      SCNODE_WALLET_SEED="$(pwgen 64 1)" || fn_die "Error: could not set SCNODE_WALLET_SEED variable for some reason. Fix it before proceeding any further.  Exiting..."
+      echo -e "\n\033[1m=== PLEASE SAVE YOUR WALLET SEED PHRASE AND KEEP IT SAFE ===\033[0m"
+      echo -e "\nYour Seed phrase is : \033[1m${SCNODE_WALLET_SEED}\033[0m\n"
       read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
-    done
+      while [[ ! "${wallet_seed_answer_3}" =~ ^(yes)$ ]]; do
+        echo -e "\nYou should safely store your seed phrase. Please try again...\n"
+        read -rp "Do you confirm you safely stored your Wallet Seed Phrase ? ('yes') " wallet_seed_answer_3
+      done
+      if [ "${wallet_seed_answer_3}" = "yes" ]; then
+        sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${SCNODE_WALLET_SEED}/g" "${ENV_FILE}"
+      fi
+    fi
   fi
+
+  SCNODE_NET_NODENAME="ext-partner-$((RANDOM % 100000 + 1))" || fn_die "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."
+
+  sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
 fi
 
-SCNODE_NET_NODENAME="ext-partner-$((RANDOM%100000+1))" || { echo "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."; exit 1; }
-sed "${sed_i[@]}" "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ROOT_DIR}/${ENV_FILE}"
+# shellcheck source=../deployments/eon/forger/.env
+source "${ENV_FILE}" || fn_die "Error: could not source ${ENV_FILE} file. Fix it before proceeding any further.  Exiting..."
 
-# Checking all the variables
-to_check=(
-  "SCNODE_CERT_SIGNERS_MAXPKS"
-  "SCNODE_CERT_SIGNERS_THRESHOLD"
-  "SCNODE_CERT_SIGNERS_PUBKEYS"
-  "SCNODE_CERT_MASTERS_PUBKEYS"
-  "SCNODE_ALLOWED_FORGERS"
-  "SCNODE_FORGER_RESTRICT"
-  "SCNODE_GENESIS_BLOCKHEX"
-  "SCNODE_GENESIS_SCID"
-  "SCNODE_GENESIS_POWDATA"
-  "SCNODE_GENESIS_MCBLOCKHEIGHT"
-  "SCNODE_GENESIS_COMMTREEHASH"
-  "SCNODE_GENESIS_WITHDRAWALEPOCHLENGTH"
-  "SCNODE_GENESIS_MCNETWORK"
-  "SCNODE_GENESIS_ISNONCEASING"
-  "SCNODE_NET_KNOWNPEERS"
-  "SCNODE_NET_MAGICBYTES"
-  "SCNODE_NET_NODENAME"
-  "SCNODE_NET_P2P_PORT"
-  "SCNODE_REST_PORT"
-  "SCNODE_USER_ID"
-  "SCNODE_GRP_ID"
-  "SCNODE_WS_SERVER_PORT"
-  "SCNODE_WS_SERVER_ENABLED"
-  "SCNODE_WALLET_SEED"
-  "SCNODE_WALLET_MAXTX_FEE"
-  "SC_COMMITTISH_EVMAPP"
-)
+check_required_variables
 
-# Making sure all the variables are set
-for var in "${to_check[@]}"; do
-  if [ -z "${!var:-}" ]; then
-    echo "Error: Environment variable ${var} is required."
+echo -e "\n\033[1m=== Creating symlink to compose file ===\033[0m"
+COMPOSE_FILE="${ROOT_DIR}/compose_files/docker-compose-${role_value}.yml"
+SYMLINK_COMPOSE_FILE="${DEPLOYMENT_DIR}/docker-compose.yml"
+ln -sf "${COMPOSE_FILE}" "${SYMLINK_COMPOSE_FILE}"
 
-    # Unset all the sourced variables
-    for i in "${to_check[@]}"; do
-      unset "${i}"
-    done
-    sleep 5
+if [ "${role_value}" = "forger" ]; then
 
-    echo "Thanks for your interest in EON, your configuration is incomplete. Application will not be able to start. Please contact Horizen to fix this issue. Exiting ..."
-    exit 1
+  DOWNLOAD_SEED_FILE="${ROOT_DIR}/scripts/forger/seed/download_seed.sh"
+  SYMLINK_SEED_DOWNLOAD_FILE="${DEPLOYMENT_DIR}/scripts/download_seed.sh"
+  SEED_FILE="${ROOT_DIR}/scripts/forger/seed/seed.sh"
+  SYMLINK_SEED_FILE="${DEPLOYMENT_DIR}/scripts/seed.sh"
+  mkdir -p "${DEPLOYMENT_DIR}/scripts"
+  ln -sf "${DOWNLOAD_SEED_FILE}" "${SYMLINK_SEED_DOWNLOAD_FILE}"
+  ln -sf "${SEED_FILE}" "${SYMLINK_SEED_FILE}"
+
+  mkdir -p "${DEPLOYMENT_DIR}/seed"
+
+  EXPLORER_URL="https://explorer.horizen.io"
+  if [ "${network_value}" = "gobi" ]; then
+    EXPLORER_URL="https://explorer-testnet.horizen.io"
   fi
-done
 
+  echo -e "\n\033[1m=== Project has been initialized correctly for ${role_value} and ${network_value} ===\033[0m"
 
-######
-# Starting evmapp
-######
-cd "${ROOT_DIR}"
+  echo -e "\n\033[1m=== RUNNING FORGER NODE ===\033[0m\n"
 
-if [ -z "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
-  echo "" && echo "=== Starting ${CONTAINER_NAME} node ===" && echo ""
-  $COMPOSE_CMD -f ${COMPOSE_FILE} up -d
-elif [ -n "$(docker ps -q -f status=running -f name="${CONTAINER_NAME}")" ]; then
-  echo "" && echo "=== ${CONTAINER_NAME} node is already running.  Re-starting ... ===" && echo ""
+  echo -e "1. First, run the zend node:"
 
-  docker update --restart=no "${CONTAINER_NAME}" &>/dev/null
-  $COMPOSE_CMD -f ${COMPOSE_FILE} exec "${CONTAINER_NAME}" gosu user curl -s -X POST "http://127.0.0.1:${SCNODE_REST_PORT}/node/stop" -H "accept: application/json" -H 'Content-Type: application/json' &>/dev/null
-  sleep 5
+  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d zend\033[0m\n"
 
-  $COMPOSE_CMD -f ${COMPOSE_FILE} up -d
-  docker update --restart=always "${CONTAINER_NAME}" &>/dev/null
+  echo -e "2. Verify your node's block height matches against the public explorer: ${EXPLORER_URL}:"
+
+  echo -e "\n\033[1mdocker exec ${ZEND_CONTAINER_NAME} gosu user curl -s --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockcount\", \"params\": [] }' -H 'content-type: text/plain;' -u [ZEN_RPC_USER]:[ZEN_RPC_PASSWORD] http://127.0.0.1:${ZEN_RPC_PORT}/\033[0m\n"
+
+  echo -e "3. Once the zend node is fully synced, start the evmapp node:"
+
+  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d\033[0m"
+
+  echo -e "\n\033[1m===========================\033[0m\n"
+else
+
+  echo -e "\n\033[1m=== Project has been initialized correctly for ${role_value} and ${network_value} ===\033[0m"
+
+  echo -e "\n\033[1m=== RUNNING RPC NODE ===\033[0m\n"
+
+  echo -e "1.Start the evmapp node:"
+
+  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d\033[0m"
+
+  echo -e "\n\033[1m========================\033[0m\n"
 fi
 
-# Making sure scnode is up and running
-scnode_start_check
-
-# Unset all the variable after app start check is completed
-for var in "${to_check[@]}"; do
-  unset "${var}"
-done
-
-
-######
-# The END
-######
-echo "" && echo "=== ${CONTAINER_NAME} node was successfully checked and (re)started ===" && echo ""
 exit 0
