@@ -60,7 +60,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 3. Verify if zend node is fully synced by running the following command and comparing the output with the current block height in the mainchain: https://explorer.horizen.io or https://explorer-testnet.horizen.io:
     ```shell
-    docker exec ${ZEND_CONTAINER_NAME} gosu user curl -s --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockcount", "params": [] }' -H 'content-type: text/plain;' -u ${ZEN_RPC_USER]}:${ZEN_RPC_PASSWORD} http://127.0.0.1:${ZEN_RPC_PORT}/
+    docker compose exec zend gosu user zen-cli getblockcount
     ```
 
 4. Once the zend node is fully synced, run the evmapp node:
@@ -93,7 +93,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 7. Verify that the keys were generated correctly by running the following command:
     ```shell
-    docker exec ${EVMAPP_CONTAINER_NAME} gosu user curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/allPublicKeys"  -H "accept: application/json" -H 'Content-Type: application/json' -d '{}'
+    docker compose exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/allPublicKeys" -H "accept: application/json" -H "Content-Type: application/json"'
     ```
 
 8. **IMPORTANT NOTE**
