@@ -3,7 +3,7 @@
 set -eEuo pipefail
 
 # Select seed_dir
-seed_dir="${HOME}/.zen/seed"
+seed_dir="/mnt/seed"
 blocks_dir="${seed_dir}/blocks"
 chainstate_dir="${seed_dir}/chainstate"
 
@@ -19,7 +19,7 @@ echo "Starting the seed process..."
 
 # Check if blocks_dir or chainstate_dir does not exist or is empty
 if [ ! -d "${blocks_dir}" ] || [ ! "$(ls -A "${blocks_dir}")" ] || [ ! -d "${chainstate_dir}" ] || [ ! "$(ls -A "${chainstate_dir}")" ]; then
-  echo "Either ${blocks_dir} or ${chainstate_dir} directories do not exist or are empty. Nothing to seed. Exiting script."
+  echo "Either ${blocks_dir} or ${chainstate_dir} seed directories do not exist or are empty. Nothing to seed. Exiting script."
   exit 0
 fi
 
@@ -55,7 +55,11 @@ fi
 echo "Creating .seed.complete file..."
 touch "${data_dir}/.seed.complete"
 
-chown -fR "$(stat -c "%u:%g" "${data_dir}")" "${data_dir}"
+# Fix ownership of the created files/folders
+# find -writrable is preferred over chown -R as :ro bind mounts could be present
+# Trailing / after ${data_dir} is important to follow the symlink
+owner="$(stat -c "%u:%g" "${data_dir}/")"
+find "${data_dir}/" -writable -print0 | xargs -0 -I{} -P64 -n1 chown -f "${owner}" "{}"
 
 echo "Seed process completed successfully."
 
