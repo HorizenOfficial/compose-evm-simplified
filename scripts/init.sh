@@ -120,7 +120,7 @@ if [ "${role_value}" = "forger" ]; then
 
   echo -e "2. Verify your node's block height matches against the public explorer: ${EXPLORER_URL}:"
 
-  echo -e "\n\033[1mdocker exec ${ZEND_CONTAINER_NAME} gosu user curl -s --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getblockcount\", \"params\": [] }' -H 'content-type: text/plain;' -u [ZEN_RPC_USER]:[ZEN_RPC_PASSWORD] http://127.0.0.1:${ZEN_RPC_PORT}/\033[0m\n"
+  echo -e "\n\033[1mdocker compose exec zend gosu user zen-cli getblockcount\033[0m\n"
 
   echo -e "3. Once the zend node is fully synced, start the evmapp node:"
 
@@ -133,7 +133,7 @@ else
 
   echo -e "\n\033[1m=== RUNNING RPC NODE ===\033[0m\n"
 
-  echo -e "1.Start the evmapp node:"
+  echo -e "1. Start the evmapp node:"
 
   echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d\033[0m"
 

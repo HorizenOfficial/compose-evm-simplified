@@ -13,7 +13,7 @@ deployment_dir="$(readlink -f "${script_dir}/../")"
 seed_dir="${deployment_dir}/seed"
 env_file="${deployment_dir}/.env"
 
-if [ -f "${env_file}" ]; then
+if ! [ -f "${env_file}" ]; then
   echo "'${env_file}' does not exist, please run init.sh script before running this script."
   exit 1
 fi
@@ -53,8 +53,8 @@ if [ "${seed_dir_available_space_bytes}" -ge ${total_size} ]; then
     --continue=true \
     --max-tries=3 \
     --retry-wait=2 \
-    --split=4 \
-    --max-connection-per-server=4 \
+    --split=16 \
+    --max-connection-per-server=16 \
     --timeout=90 \
     --auto-save-interval=5 \
     --always-resume=false \
