@@ -11,7 +11,7 @@ If you are using version 1.2.* of this project, you will need to follow these st
 
 1. Make a copy of your .env file. This file contains some secrets that you will need to keep.
 2. Stop the running containers. You can use the `docker compose down` command to stop and remove the containers. **DO NOT REMOVE THE VOLUMES**.
-3. Pull the new tag 1.3.0 of the project.
+3. Pull the new tag 1.3.0 of the project. To do so run `git pull && git checkout 1.3.0`.
 4. Run the init script in order to set up the new structure of the project.
 5. When requested by the script provide the already generated SCNODE_WALLET_SEED available in the old .env file.
 6. Review the new .env file and update the values if necessary. For instance RPC or REST passwords, or node names.

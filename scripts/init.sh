@@ -77,9 +77,7 @@ if ! [ -f "${ENV_FILE}" ]; then
       fi
     fi
   fi
-
-  SCNODE_NET_NODENAME="ext-partner-$((RANDOM % 100000 + 1))" || fn_die "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."
-
+  SCNODE_NET_NODENAME="ext-${role_value}-$((RANDOM % 100000 + 1))" || fn_die "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."
   sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
 fi
 
@@ -94,7 +92,6 @@ SYMLINK_COMPOSE_FILE="${DEPLOYMENT_DIR}/docker-compose.yml"
 ln -sf "${COMPOSE_FILE}" "${SYMLINK_COMPOSE_FILE}"
 
 if [ "${role_value}" = "forger" ]; then
-
   DOWNLOAD_SEED_FILE="${ROOT_DIR}/scripts/forger/seed/download_seed.sh"
   SYMLINK_SEED_DOWNLOAD_FILE="${DEPLOYMENT_DIR}/scripts/download_seed.sh"
   SEED_FILE="${ROOT_DIR}/scripts/forger/seed/seed.sh"
@@ -134,7 +131,6 @@ if [ "${role_value}" = "forger" ]; then
 
   echo -e "\n\033[1m===========================\033[0m\n"
 else
-
   echo -e "\n\033[1m=== Project has been initialized correctly for ${role_value} and ${network_value} ===\033[0m"
 
   echo -e "\n\033[1m=== RUNNING RPC NODE ===\033[0m\n"
