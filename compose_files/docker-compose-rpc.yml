@@ -18,6 +18,7 @@ services:
     image: "zencash/evmapp:${EVMAPP_TAG}"
     container_name: "${EVMAPP_CONTAINER_NAME:-evmapp}"
     restart: on-failure:5
+    stop_grace_period: 10m
     networks:
       evmapp_network:
         ipv4_address: "${EVMAPP_IP_ADDRESS}"
@@ -46,6 +47,7 @@ services:
       - SCNODE_ALLOWED_FORGERS
       - SCNODE_FORGER_ENABLED
       - SCNODE_FORGER_RESTRICT
+      - SCNODE_FORGER_MAXCONNECTIONS
       - SCNODE_GENESIS_BLOCKHEX
       - SCNODE_GENESIS_SCID
       - SCNODE_GENESIS_POWDATA

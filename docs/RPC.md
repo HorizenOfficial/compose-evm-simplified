@@ -17,7 +17,7 @@ The script will generate the required deployment files under the [deployments](.
 --- 
 
 ```shell
-cd deployments/rpc/[eon|gobi] && docker compose up -d
+docker compose -f deployments/rpc/[eon|gobi]/docker-compose.yml up -d
 ```
 
 ## Other useful docker commands
@@ -26,19 +26,19 @@ cd deployments/rpc/[eon|gobi] && docker compose up -d
 
 - Run the following command to stop the stack:
     ```shell
-    cd deployments/rpc/[eon|gobi] && docker compose stop
+    docker compose -f deployments/rpc/[eon|gobi]/docker-compose.yml stop
     ```
 - Run the following command to start the stack again:
     ```shell
-    cd deployments/rpc/[eon|gobi] && docker compose up -d
+    docker compose -f deployments/rpc/[eon|gobi]/docker-compose.yml up -d
     ```
 - Run the following command to stop the stack and delete the containers:
     ```shell
-    cd deployments/rpc/[eon|gobi] && docker compose down
+    docker compose -f deployments/rpc/[eon|gobi]/docker-compose.yml down
     ```
 - Run the following commands to destroy the stack, **this action will delete your wallet and all the data**:
     ```shell
-    cd deployments/rpc/[eon|gobi] && docker compose down
+    docker compose -f deployments/rpc/[eon|gobi]/docker-compose.yml down
     docker volume ls # List all the volumes
     docker volume rm [volume_name] # Remove the volumes related to your stack, these volumes are named after the stack name: [COMPOSE_PROJECT_NAME]_[volume-name]
     ```

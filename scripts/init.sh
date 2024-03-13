@@ -106,8 +106,10 @@ if [ "${role_value}" = "forger" ]; then
   mkdir -p "${DEPLOYMENT_DIR}/seed"
 
   EXPLORER_URL="https://explorer.horizen.io"
+  EVMAPP_EXPLORER_URL="https://eon-explorer.horizenlabs.io"
   if [ "${network_value}" = "gobi" ]; then
     EXPLORER_URL="https://explorer-testnet.horizen.io"
+    EVMAPP_EXPLORER_URL="https://gobi-explorer.horizenlabs.io"
   fi
 
   echo -e "\n\033[1m=== Project has been initialized correctly for ${role_value} and ${network_value} ===\033[0m"
@@ -116,15 +118,19 @@ if [ "${role_value}" = "forger" ]; then
 
   echo -e "1. First, run the zend node:"
 
-  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d zend\033[0m\n"
+  echo -e "\n\033[1mdocker compose -f ${DEPLOYMENT_DIR}/docker-compose.yml up -d zend\033[0m\n"
 
   echo -e "2. Verify your node's block height matches against the public explorer: ${EXPLORER_URL}:"
 
-  echo -e "\n\033[1mdocker compose exec zend gosu user zen-cli getblockcount\033[0m\n"
+  echo -e "\n\033[1mdocker compose -f ${DEPLOYMENT_DIR}/docker-compose.yml exec zend gosu user zen-cli getblockcount\033[0m\n"
 
   echo -e "3. Once the zend node is fully synced, start the evmapp node:"
 
-  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d\033[0m"
+  echo -e "\n\033[1mdocker compose -f ${DEPLOYMENT_DIR}/docker-compose.yml up -d\033[0m"
+
+  echo -e "4. Verify your evmapp node's block height matches against the public explorer: ${EVMAPP_EXPLORER_URL}:"
+
+  echo -e "\n\033[1mdocker compose -f ${DEPLOYMENT_DIR}/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST \"http://127.0.0.1:${SCNODE_REST_PORT}/block/best\" -H \"accept: application/json\" | jq '.result.height''\033[0m\n"
 
   echo -e "\n\033[1m===========================\033[0m\n"
 else
@@ -135,7 +141,7 @@ else
 
   echo -e "1. Start the evmapp node:"
 
-  echo -e "\n\033[1mcd ${DEPLOYMENT_DIR} && docker compose up -d\033[0m"
+  echo -e "\n\033[1mdocker compose -f ${DEPLOYMENT_DIR}/docker-compose.yml up -d\033[0m"
 
   echo -e "\n\033[1m========================\033[0m\n"
 fi

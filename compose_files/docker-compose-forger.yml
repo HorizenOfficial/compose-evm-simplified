@@ -19,7 +19,7 @@ services:
   zend:
     image: "zencash/zen-node:${ZEND_TAG}"
     container_name: "${ZEND_CONTAINER_NAME:-zend}"
-    restart: always
+    restart: on-failure:5
     stop_grace_period: 10m
     networks:
       evmapp_network:
@@ -57,7 +57,7 @@ services:
   evmapp:
     image: "zencash/evmapp:${EVMAPP_TAG}"
     container_name: "${EVMAPP_CONTAINER_NAME:-evmapp}"
-    restart: always
+    restart: on-failure:5
     stop_grace_period: 10m
     networks:
       evmapp_network:
