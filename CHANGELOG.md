@@ -3,6 +3,7 @@
 **1.3.0**
 * SDK dependency updated to version 0.11.0 (see [SDK changelog](https://github.com/HorizenOfficial/Sidechains-SDK/blob/0.11.0/CHANGELOG.md))
 * Fork configuration to enable: EVM Update, Forger stake native smart contract new methods, Pause Forging feature
+* PLEASE REFER TO THE [MIGRATION GUIDE](./docs/MIGRATION.md) FOR THE MIGRATION PROCESS FROM VERSION 1.2.*.
 
 **1.2.1**
 * SDK dependency updated to version 0.10.1
