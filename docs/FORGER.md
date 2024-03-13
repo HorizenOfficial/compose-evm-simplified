@@ -60,7 +60,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 3. Verify if zend node is fully synced by running the following command and comparing the output with the current block height in the mainchain: https://explorer.horizen.io or https://explorer-testnet.horizen.io:
     ```shell
-    docker compose exec zend gosu user zen-cli getblockcount
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec zend gosu user zen-cli getblockcount
     ```
 
 4. Once the zend node is fully synced, run the evmapp node:
