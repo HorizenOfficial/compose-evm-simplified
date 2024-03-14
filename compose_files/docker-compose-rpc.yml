@@ -28,8 +28,8 @@ services:
       - "127.0.0.1:${SCNODE_WS_SERVER_PORT}:${SCNODE_WS_SERVER_PORT}"
       - "127.0.0.1:${SCNODE_REST_PORT}:${SCNODE_REST_PORT}"
     volumes:
-      - "evmapp-data:/sidechain/datadir:rw"
-      - "evmapp-snark-keys:/sidechain/snark_keys:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}evmapp-data:/sidechain/datadir:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}evmapp-snark-keys:/sidechain/snark_keys:rw"
       - "./logs/evmapp:/sidechain/logs:rw"
     environment:
       - "LOCAL_GRP_ID=${SCNODE_GRP_ID}"
