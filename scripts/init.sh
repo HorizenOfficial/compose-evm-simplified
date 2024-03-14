@@ -79,6 +79,54 @@ if ! [ -f "${ENV_FILE}" ]; then
   fi
   SCNODE_NET_NODENAME="ext-${role_value}-$((RANDOM % 100000 + 1))" || fn_die "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."
   sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
+
+  # Setting local user and group in docker containers
+  LOCAL_USER_ID="$(id -u)"
+  LOCAL_GROUP_ID="$(id -g)"
+  echo -e "\n\033[1m=== Setting up the docker containers local user and group ids ===\033[0m\n"
+  echo -e "The uid:gid with which to run the processes inside of the container will default to ${LOCAL_USER_ID}:${LOCAL_GROUP_ID}"
+  read -rp "Do you want to change the user (please answer 'no' if you don't know what you are doing) ? ('yes' or 'no') " user_group_answer
+  while [[ ! "${user_group_answer}" =~ ^(yes|no)$ ]]; do
+    echo -e "\nError: The only allowed answers are 'yes' or 'no'. Try again...\n"
+    read -rp "Do you want to change the user (please answer 'no' if you don't know what you are doing) ? ('yes' or 'no') " user_group_answer
+  done
+  if [ "${user_group_answer}" = "yes" ]; then
+    read -rp "Please type the user id you want to use in your docker containers (0 is an invalid value): " user_id
+    while [[ ! "${user_id}" =~ ^[1-9][0-9]*$ ]]; do
+      echo -e "\nError: The user id must be a positive integer and not 0. Try again...\n"
+      read -rp "Please type the user id you want to use in your docker containers (0 is an invalid value): " user_id
+    done
+    read -rp "Please type the group id you want to use in your docker containers: " group_id
+    while [[ ! "${group_id}" =~ ^[1-9][0-9]*$ ]]; do
+      echo -e "\nError: The user id must be a positive integer and not 0. Try again...\n"
+      read -rp "Please type the group id you want to use in your docker containers (0 is an invalid value): " group_id
+    done
+    LOCAL_USER_ID="${user_id}"
+    LOCAL_GROUP_ID="${group_id}"
+  fi
+  sed -i "s/SCNODE_USER_ID=.*/SCNODE_USER_ID=${LOCAL_USER_ID}/g" "${ENV_FILE}"
+  sed -i "s/SCNODE_GRP_ID=.*/SCNODE_GRP_ID=${LOCAL_GROUP_ID}/g" "${ENV_FILE}"
+  if [ "${role_value}" = "forger" ]; then
+    sed -i "s/ZEN_LOCAL_USER_ID=.*/ZEN_LOCAL_USER_ID=${LOCAL_USER_ID}/g" "${ENV_FILE}"
+    sed -i "s/ZEN_LOCAL_GRP_ID=.*/ZEN_LOCAL_GRP_ID=${LOCAL_GROUP_ID}/g" "${ENV_FILE}"
+  fi
+
+  # Setting volumes datadir
+  echo -e "\n\033[1m=== Setting up the docker volumes datadir ===\033[0m\n"
+  echo -e "By default internal docker volumes will be used."
+  read -rp "Do you want to change the datadir (please answer 'no' if you don't know what you are doing) ? ('yes' or 'no') " datadir_answer
+  while [[ ! "${datadir_answer}" =~ ^(yes|no)$ ]]; do
+    echo -e "\nError: The only allowed answers are 'yes' or 'no'. Try again...\n"
+    read -rp "Do you want to change the datadir (please answer 'no' if you don't know what you are doing) ? ('yes' or 'no') " datadir_answer
+  done
+  if [ "${datadir_answer}" = "yes" ]; then
+    default_datadir_path="./data/"
+    read -rp "Please type the path to the datadir you want to use in your docker containers or press enter to use default ('${default_datadir_path}'): " datadir_path
+    if [ -z "${datadir_path}" ]; then
+      datadir_path="${default_datadir_path}"
+    fi
+    sed -i "s#COMPOSE_PROJECT_DATA_DIR=.*#COMPOSE_PROJECT_DATA_DIR=${datadir_path}#g" "${ENV_FILE}"
+  fi
 fi
 
 # shellcheck source=../deployments/eon/forger/.env

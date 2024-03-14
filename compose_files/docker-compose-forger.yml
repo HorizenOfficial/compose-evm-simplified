@@ -31,8 +31,8 @@ services:
       - "${ZEN_RPC_PORT}"
       - "${ZEN_WS_PORT}"
     volumes:
-      - "zcash-params:/mnt/zcash-params:rw"
-      - "zen-data:/mnt/zen:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}zcash-params:/mnt/zcash-params:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}zen-data:/mnt/zen:rw"
       - "./seed:/mnt/seed:rw"
       - "./scripts/seed.sh:/usr/local/bin/seed.sh:rw"
     environment:
@@ -69,8 +69,8 @@ services:
     ports:
       - "${SCNODE_NET_P2P_PORT}:${SCNODE_NET_P2P_PORT}"
     volumes:
-      - "evmapp-data:/sidechain/datadir:rw"
-      - "evmapp-snark-keys:/sidechain/snark_keys:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}evmapp-data:/sidechain/datadir:rw"
+      - "${COMPOSE_PROJECT_DATA_DIR}evmapp-snark-keys:/sidechain/snark_keys:rw"
       - "./logs/evmapp:/sidechain/logs:rw"
     environment:
       - "RPC_USER=${ZEN_RPC_USER}"
