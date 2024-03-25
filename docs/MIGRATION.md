@@ -16,4 +16,5 @@ If you are using version 1.2.* of this project, you will need to follow these st
 5. When requested by the script provide the already generated SCNODE_WALLET_SEED available in the old .env file.
 6. Review the new .env file and update the values if necessary. For instance RPC or REST passwords, or node names.
 7. Run the `docker compose up -d` command to start the new containers. See the [README](../README.md) for more information. 
+8. Go back to [README](../README.md) and execute the second step, regarding the [upgrade.sh](./scripts/upgrade.sh) script.
 The nodes should start and use the old volumes and data, so there should be no need to resync the nodes.
