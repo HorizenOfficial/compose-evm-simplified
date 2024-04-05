@@ -9,6 +9,14 @@ echo -e "\n\033[1m=== Checking all the requirements ===\033[0m"
 
 verify_required_commands
 
+# Making sure the script is not being run as root
+LOCAL_USER_ID="$(id -u)"
+LOCAL_GROUP_ID="$(id -g)"
+if [ "${LOCAL_USER_ID}" == 0 ] || [ "${LOCAL_GROUP_ID}" == 0 ]; then
+  echo -e "\n\033[0;31m\033[1m=== Error: This script should not be run as root. Exiting ===\033[0m\n"
+  exit 1
+fi
+
 echo -e "\n\033[1mWhat kind of node type would you like to run: \033[0m"
 select role_value in rpc forger; do
   if [ -n "${role_value}" ]; then
@@ -81,8 +89,6 @@ if ! [ -f "${ENV_FILE}" ]; then
   sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
 
   # Setting local user and group in docker containers
-  LOCAL_USER_ID="$(id -u)"
-  LOCAL_GROUP_ID="$(id -g)"
   echo -e "\n\033[1m=== Setting up the docker containers local user and group ids ===\033[0m\n"
   echo -e "The uid:gid with which to run the processes inside of the container will default to ${LOCAL_USER_ID}:${LOCAL_GROUP_ID}"
   read -rp "Do you want to change the user (please answer 'no' if you don't know what you are doing) ? ('yes' or 'no') " user_group_answer
