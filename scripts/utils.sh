@@ -144,7 +144,7 @@ strip_0x() {
   if [[ "${input}" =~ ^0x${eth_address_regex} ]]; then
     # Remove the "0x" prefix
     echo "${input:2}"
-  elif [[ "${input}" =~ ${eth_address_regex} ]]; then
+  elif [[ "${input}" =~ ^${eth_address_regex} ]]; then
     echo "${input}"
   else
     # If address is in the wrong format
