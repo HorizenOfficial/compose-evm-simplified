@@ -1,5 +1,8 @@
 # Changelog
 
+**1.3.0+2**
+* SCNODE_FORGER_REWARD_ADDRESS implemented in EON version **1.3.0** added to the compose project as well as to the setup forger process.
+
 **1.3.0+1**
 * EON version: 1.3.0
 * SDK version: 0.11.0
