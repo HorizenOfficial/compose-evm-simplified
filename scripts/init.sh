@@ -89,12 +89,12 @@ if ! [ -f "${ENV_FILE}" ]; then
   sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
 
   # Setting explicit wallet address for forger rewards to be sent to vs default local forger
-  if [ "${role_value}" = "forger" ] && [ "${network_value}" = "eon" ]; then
+  if [ "${role_value}" = "forger" ]; then
     echo -e "\n\033[1m=== Setting up FORGER rewards address ===\033[0m\n"
-    read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to(FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
+    read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to (FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
     while [[ ! "${reward_address_set}" =~ ^(yes|no)$ ]]; do
       echo -e "\nWarning: The only allowed answers are 'yes' or 'no'. Please try again...\n"
-      read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to(FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
+      read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to (FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
     done
     if [ "${reward_address_set}" = "yes" ]; then
       read -rp "Please type or copy/paste here the wallet address for your FORGER rewards to be sent to: " forger_reward_address
@@ -111,7 +111,7 @@ if ! [ -f "${ENV_FILE}" ]; then
         else
           # Removing env_file since exit script will leave it in incomplete state
           rm -f "${ENV_FILE}"
-          fn_die "Error: Provided wallet address is in the WRONG format!!! Please re-run the init.sh script again. Exiting ..."
+          fn_die "Error: Provided wallet address is in the WRONG format.\n\n=== An Ethereum address is a 42-character hexadecimal address derived from the last 20 bytes of the public key controlling the account with '0x' appended in front ===\n\nPlease re-run the init.sh script again. Exiting ..."
         fi
       else
         # Removing env_file since exit script will leave it in incomplete state

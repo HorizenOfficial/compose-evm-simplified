@@ -131,7 +131,7 @@ scnode_start_check() {
 
 # Function to strip 0x prefix
 strip_0x() {
-  local usage="Check validity of etherium wallet address - usage: ${FUNCNAME[0]} {eth_wallet_address}"
+  local usage="Check validity of Ethereum wallet address - usage: ${FUNCNAME[0]} {eth_wallet_address}"
   [ "${1:-}" = "usage" ] && echo "${usage}" && return
   [ "$#" -ne 1 ] && {
     fn_die "${FUNCNAME[0]} error: function requires exactly one argument.\n\n${usage}"
