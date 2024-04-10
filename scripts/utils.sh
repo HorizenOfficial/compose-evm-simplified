@@ -2,7 +2,7 @@
 
 # Functions
 fn_die() {
-  echo -e "\n\033[1m${1}\033[0m\n" >&2
+  echo -e "\n\033[1;31m${1}\033[0m\n" >&2
   exit "${2:-1}"
 }
 
@@ -25,7 +25,7 @@ check_env_var() {
   local usage="Check if required environmental variable is empty and produce an error - usage: ${FUNCNAME[0]} {env_var_name}"
   [ "${1:-}" = "usage" ] && echo "${usage}" && return
   [ "$#" -ne 1 ] && {
-    fn_die -e "${FUNCNAME[0]} error: function requires exactly one argument.\n\n${usage}"
+    fn_die "${FUNCNAME[0]} error: function requires exactly one argument.\n\n${usage}"
   }
 
   local var="${1}"
@@ -127,4 +127,27 @@ scnode_start_check() {
       fn_die "Error: ${EVMAPP_CONTAINER_NAME} container and/or application is not reachable."
     fi
   done
+}
+
+# Function to strip 0x prefix
+strip_0x() {
+  local usage="Check validity of Ethereum wallet address - usage: ${FUNCNAME[0]} {eth_wallet_address}"
+  [ "${1:-}" = "usage" ] && echo "${usage}" && return
+  [ "$#" -ne 1 ] && {
+    fn_die "${FUNCNAME[0]} error: function requires exactly one argument.\n\n${usage}"
+  }
+
+  local input="${1}"
+  local eth_address_regex="[0-9a-fA-F]{40}$"
+
+  # Check if the input starts with "0x"
+  if [[ "${input}" =~ ^0x${eth_address_regex} ]]; then
+    # Remove the "0x" prefix
+    echo "${input:2}"
+  elif [[ "${input}" =~ ^${eth_address_regex} ]]; then
+    echo "${input}"
+  else
+    # If address is in the wrong format
+    echo "invalid"
+  fi
 }

@@ -4,7 +4,7 @@
 set -eEuo pipefail
 
 command -v aria2c &>/dev/null || {
-  echo "${FUNCNAME[0]} Error: 'aria2c' is required to run this script, see installation instructions at 'https://github.com/aria2/aria2/releases/tag/release-1.37.0'."
+  echo "Error: 'aria2c' is required to run this script, see installation instructions at 'https://github.com/aria2/aria2/releases/tag/release-1.37.0'."
   exit 1
 }
 

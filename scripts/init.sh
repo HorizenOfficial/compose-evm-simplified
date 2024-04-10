@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -eEuo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)"
@@ -13,8 +12,7 @@ verify_required_commands
 LOCAL_USER_ID="$(id -u)"
 LOCAL_GROUP_ID="$(id -g)"
 if [ "${LOCAL_USER_ID}" == 0 ] || [ "${LOCAL_GROUP_ID}" == 0 ]; then
-  echo -e "\n\033[0;31m\033[1m=== Error: This script should not be run as root. Exiting ===\033[0m\n"
-  exit 1
+  fn_die "Error: This script should not be run as root. Exiting..."
 fi
 
 echo -e "\n\033[1mWhat kind of node type would you like to run: \033[0m"
@@ -69,6 +67,8 @@ if ! [ -f "${ENV_FILE}" ]; then
         SCNODE_WALLET_SEED="${imported_wallet_seed}"
         sed -i "s/SCNODE_WALLET_SEED=.*/SCNODE_WALLET_SEED=${imported_wallet_seed}/g" "${ENV_FILE}"
       else
+        # Removing env_file since exit script will leave it in incomplete state
+        rm -f "${ENV_FILE}"
         fn_die "Wallet seed phrase import aborted; please run again the init.sh script. Exiting ..."
       fi
     else
@@ -87,6 +87,39 @@ if ! [ -f "${ENV_FILE}" ]; then
   fi
   SCNODE_NET_NODENAME="ext-${role_value}-$((RANDOM % 100000 + 1))" || fn_die "Error: could not set NODE_NAME variable for some reason. Fix it before proceeding any further.  Exiting..."
   sed -i "s/SCNODE_NET_NODENAME=.*/SCNODE_NET_NODENAME=${SCNODE_NET_NODENAME}/g" "${ENV_FILE}"
+
+  # Setting explicit wallet address for forger rewards to be sent to vs default local forger
+  if [ "${role_value}" = "forger" ]; then
+    echo -e "\n\033[1m=== Setting up FORGER rewards address ===\033[0m\n"
+    read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to (FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
+    while [[ ! "${reward_address_set}" =~ ^(yes|no)$ ]]; do
+      echo -e "\nWarning: The only allowed answers are 'yes' or 'no'. Please try again...\n"
+      read -rp "Do you want to provide the wallet address for your FORGER rewards to be sent to (FORGER local wallet address is used by default)? ('yes' or 'no') " reward_address_set
+    done
+    if [ "${reward_address_set}" = "yes" ]; then
+      read -rp "Please type or copy/paste here the wallet address for your FORGER rewards to be sent to: " forger_reward_address
+      echo -e "\nYou have provided the following wallet address: \033[1m${forger_reward_address}\033[0m\n"
+      read -rp "Do you confirm this is the wallet address you want to use for your FORGER rewards to be sent to: ${forger_reward_address}? ('yes' or 'no') " reward_address_set_2
+      while [[ ! "${reward_address_set_2}" =~ ^(yes|no)$ ]]; do
+        echo -e "\nWarning: The only allowed answers are 'yes' or 'no'. Please try again...\n"
+        read -rp "Do you confirm this is the wallet address you want to use for your FORGER rewards to be sent to: ${forger_reward_address}? ('yes' or 'no') " reward_address_set_2
+      done
+      if [ "${reward_address_set_2}" = "yes" ]; then
+        forger_reward_address="$(strip_0x "${forger_reward_address}")"
+        if [ "${forger_reward_address}" != "invalid" ]; then
+          sed -i "s/SCNODE_FORGER_REWARD_ADDRESS=.*/SCNODE_FORGER_REWARD_ADDRESS=${forger_reward_address}/g" "${ENV_FILE}"
+        else
+          # Removing env_file since exit script will leave it in incomplete state
+          rm -f "${ENV_FILE}"
+          fn_die "Error: Provided wallet address is in the WRONG format.\n\n=== An Ethereum address is a 42-character hexadecimal address derived from the last 20 bytes of the public key controlling the account with '0x' appended in front ===\n\nPlease re-run the init.sh script again. Exiting ..."
+        fi
+      else
+        # Removing env_file since exit script will leave it in incomplete state
+        rm -f "${ENV_FILE}"
+        fn_die "Error: Setting wallet address to send FORGER rewards to has failed. Please re-run the init.sh script again. Exiting ..."
+      fi
+    fi
+  fi
 
   # Setting local user and group in docker containers
   echo -e "\n\033[1m=== Setting up the docker containers local user and group ids ===\033[0m\n"
