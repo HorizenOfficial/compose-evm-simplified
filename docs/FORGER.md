@@ -12,7 +12,6 @@ The script will generate the required deployment files under the [deployments](.
 
 --- 
 
-
 ## Zend seed
 
 A forger node requires a zend node to be running as well. Syncing a zend node from scratch may take a few hours,
@@ -43,9 +42,8 @@ This directory will be mounted into the zend container and used to seed the node
     ```shell
     ./deployments/forger/[eon|gobi]/scripts/download_seed.sh
     ```
-  
---- 
 
+--- 
 
 ## Running the stack
 
@@ -107,6 +105,46 @@ This directory will be mounted into the zend container and used to seed the node
 - **We recommend to not delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
 - Stakes should be delegated from web3 wallets like MetaMask. 
 - You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
+
+---
+
+## Import or Restart a Forger Node With Existing Keys
+
+In order to import or restart a forger node with existing keys, it is important to generate the keys before the node starts syncing.
+
+Please follow these steps:
+1. Follow Steps 1-3 from the previous section to start the zend node and let it sync. When requested by init.sh script provide the same `wallet seed phrase` used to generate the keys.
+2. Prepare the evmapp node to run without peers or connection. This will allow the node to generate the keys before syncing. To achieve this edit the docker-compose.yml file and comment out the inet network on evmapp service:
+   ```yaml
+      evmapp:
+        image: "zencash/evmapp:${EVMAPP_TAG}"
+        container_name: "${EVMAPP_CONTAINER_NAME:-evmapp}"
+        restart: on-failure:5
+        stop_grace_period: 10m
+        networks:
+          evmapp_network:
+            ipv4_address: ${EVMAPP_IP_ADDRESS}
+          # inet:
+
+    ```
+3. Run the evmapp node:
+    ```shell
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d evmapp
+    ```
+4. Follow steps 6-9 from the previous section to generate the keys. This will generate exactly the same keys, as the wallet seed phrase is the same.
+5. Stop the evmapp node:
+    ```shell
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml stop evmapp
+    ```
+6. Undo the changes made in step 2.
+7. Run the evmapp node:
+    ```shell
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d evmapp --force-recreate
+    ```
+8. Verify if the evmapp node is fully synced by running the following command and comparing the output with the current block height in the sidechain: https://eon-explorer.horizenlabs.io or https://gobi-explorer.horizenlabs.io:
+    ```shell
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/block/best" -H "accept: application/json" | jq '.result.height''
+    ```
 
 --- 
 
