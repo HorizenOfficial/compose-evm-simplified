@@ -1,5 +1,8 @@
 # Changelog
 
+**1.4.0**
+* EON version: 1.4.0 (see [EON changelog](https://github.com/HorizenOfficial/eon/blob/main/doc/release/1.4.0.md))
+
 **1.3.0+3**
 * ZEND version: 5.0.2.
 

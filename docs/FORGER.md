@@ -175,4 +175,7 @@ Please follow these steps:
 
 To participate in staking on EON, use the [eon-smart-contract-tools](https://github.com/HorizenOfficial/eon-smart-contract-tools) to create a Forging Stake using Web3.js.
 
+> ⚠️ EVMAPP 1.4.0
+> - For new 1.4.0 deployments (not upgrades), please note the introduction of the `/transaction/registerForger` method, which is required for registering a new forger.
+
 ---
