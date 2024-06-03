@@ -101,15 +101,15 @@ This directory will be mounted into the zend container and used to seed the node
 
 9. **IMPORTANT NOTE**
    - The address  **_"Generated Ethereum Address Key Pair"_** is where rewards will go to. 
-   - Rewards are paid to the address specified in the .env file if it's not empty, and to the first ETH address in the wallet of the Forger Node otherwise. 
-   - **We recommend to not delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
+   - Rewards are paid to the address specified in the .env file if it is not empty; otherwise, they are paid to the first ETH address in the Forger Node's wallet. 
+   - **We recommend not to delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
    - Stakes should be delegated from web3 wallets like MetaMask. 
    - You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
 
 10. Registration Step for the Forger: will be performed by executing a transaction declaring the forger public keys (VRF key and block sign key), 
     the percentage of rewards to be redirected to a smart contract responsible to manage the delegators’ rewards (named “reward share”), 
     and the address of that smart contract. (The last two fields will be optional).
-    An additional signature will be required with the method to prove the sender is the effective owner of the forger keys, 
+    An additional signature will be required with the method to prove that the sender is the effective owner of the forger keys, 
     for this reason the preferred way is to use the new http endpoint `/transaction/registerForger` 
     to invoke the tx based on the local wallet data (it will handle automatically the additional signature).
     A minimum amount of **10 ZEN** will be required to be sent with the transaction, it will be converted automatically 
