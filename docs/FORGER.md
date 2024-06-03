@@ -100,11 +100,42 @@ This directory will be mounted into the zend container and used to seed the node
     ```
 
 9. **IMPORTANT NOTE**
-- The address  **_"Generated Ethereum Address Key Pair"_** is where rewards will go to. 
-- Rewards are paid to the first ETH address in the wallet of the Forger Node. 
-- **We recommend to not delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
-- Stakes should be delegated from web3 wallets like MetaMask. 
-- You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
+   - The address  **_"Generated Ethereum Address Key Pair"_** is where rewards will go to. 
+   - Rewards are paid to the address specified in the .env file if it is not empty; otherwise, they are paid to the first ETH address in the Forger Node's wallet. 
+   - **We recommend not to delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
+   - Stakes should be delegated from web3 wallets like MetaMask. 
+   - You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
+
+10. Registration Step for the Forger: will be performed by executing a transaction declaring the forger public keys (VRF key and block sign key), 
+    the percentage of rewards to be redirected to a smart contract responsible to manage the delegators’ rewards (named “reward share”), 
+    and the address of that smart contract. (The last two fields will be optional).
+    An additional signature will be required with the method to prove that the sender is the effective owner of the forger keys, 
+    for this reason the preferred way is to use the new http endpoint `/transaction/registerForger` 
+    to invoke the tx based on the local wallet data (it will handle automatically the additional signature).
+    A minimum amount of **10 ZEN** will be required to be sent with the transaction, it will be converted automatically 
+    into the first stake assigned to the forger. For more information about the registration process, please refer to the 
+    [EVM documentation](https://github.com/HorizenOfficial/eon/blob/1.4.0-RC1/doc/api/transaction/registerForger.md).
+    ```shell
+    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/transaction/registerForger" -H "accept: application/json" -d <requestBody>'
+    
+    # Request body example:
+    {
+       "blockSignPubKey": "10e9b5236a56cddb9f0332e9dd6d69151494f24172b26ab24a27473bbc92a181",
+       "vrfPubKey": "6a376f8a88b386f69296baa0792641d393c85a19b28dfd4a11d8f0a74618873280",
+       "rewardShare": "234",
+       "rewardAddress": "62b1bc6fd237b775138d910274ff2911d7aea5cc",      
+       "stakedAmount": "100000000000",   
+    }
+    ```
+
+11. **IMPORTANT NOTE 2**
+    - The registration step will not be required for existing forgers owning a stake before the hard fork. These will be 
+    automatically added to the list of registered ones, with "reward share" = 0 and "smart contract address" = none.
+    - Another http endpoint `/transaction/updateForger` has been added to update existing forgers [updateForger](https://github.com/HorizenOfficial/eon/blob/1.4.0-RC1/doc/api/transaction/updateForger.md) in order to allow forgers with 
+    "reward share" = 0 and "smart contract address" = none to update the fields. The update will be allowed only one time, once set, the values will be immutable.
+    This protects delegators from distribution mechanisms being changed without their knowledge.
+    - The consensus lottery will consider only forgers owning an amount of stakes (directly or delegated) equal or over **10 ZEN**.
+
 
 ---
 
