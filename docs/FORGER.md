@@ -101,7 +101,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 9. **IMPORTANT NOTE**
    - The address  **_"Generated Ethereum Address Key Pair"_** is where rewards will go to. 
-   - Rewards are paid to the first ETH address in the wallet of the Forger Node. 
+   - Rewards are paid to the address specified in the .env file if it's not empty, and to the first ETH address in the wallet of the Forger Node otherwise. 
    - **We recommend to not delegate from the node so that no stakes have to be custodied on it, which reduces attack surface.**
    - Stakes should be delegated from web3 wallets like MetaMask. 
    - You can also import this address into MetaMask as an external account so that you can spend the rewards without having to use the node's api.
@@ -129,11 +129,10 @@ This directory will be mounted into the zend container and used to seed the node
     ```
 
 11. **IMPORTANT NOTE 2**
-    - The registration step will not be required for existing forgers owning a stake before the hardfork. These will be 
+    - The registration step will not be required for existing forgers owning a stake before the hard fork. These will be 
     automatically added to the list of registered ones, with "reward share" = 0 and "smart contract address" = none.
     - Another http endpoint `/transaction/updateForger` has been added to update existing forgers [updateForger](https://github.com/HorizenOfficial/eon/blob/1.4.0-RC1/doc/api/transaction/updateForger.md) in order to allow forgers with 
-    "reward share" = 0 and "smart contract address" = none to update the fields.
-    The update will be allowed only one time, once set, the values will be immutable. Rele
+    "reward share" = 0 and "smart contract address" = none to update the fields. The update will be allowed only one time, once set, the values will be immutable.
     This protects delegators from distribution mechanisms being changed without their knowledge.
     - The consensus lottery will consider only forgers owning an amount of stakes (directly or delegated) equal or over **10 ZEN**.
 
