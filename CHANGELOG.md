@@ -1,5 +1,11 @@
 # Changelog
 
+**1.4.0**
+* EON version: 1.4.0
+* SDK version: 0.12.0 (see [SDK changelog](https://github.com/HorizenOfficial/Sidechains-SDK/blob/0.12.0-RC1/CHANGELOG.md))
+* Fork configuration to enable new on-chain delegated staking reward mechanism and new handling of rewards from mainchain
+* Bug fix: Modify entrypoint.sh: Improve declared ip detection in MacOS environments
+
 **1.4.0-RC1**
 * EON version: 1.4.0-RC1
 * SDK version: 0.12.0-RC1 (see [SDK changelog](https://github.com/HorizenOfficial/Sidechains-SDK/blob/0.12.0-RC1/CHANGELOG.md))
