@@ -66,6 +66,7 @@ services:
     expose:
       - "${SCNODE_REST_PORT}"
       - "${SCNODE_WS_SERVER_PORT}"
+      - "${SCNODE_METRICS_PORT}"
     ports:
       - "${SCNODE_NET_P2P_PORT}:${SCNODE_NET_P2P_PORT}"
     volumes:
@@ -123,6 +124,9 @@ services:
       - SCNODE_WS_SERVER_ENABLED
       - SCNODE_LOG_FILE_LEVEL
       - SCNODE_LOG_CONSOLE_LEVEL
+      - SCNODE_METRICS_PORT
+      - SCNODE_METRICS_ENABLED
+      - SCNODE_METRICS_REST_PASSWORD
     logging:
       driver: "json-file"
       options:
