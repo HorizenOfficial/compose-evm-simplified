@@ -1,6 +1,6 @@
 # Changelog
 
-**1.4.1**
+**1.4.0+1**
 * ZEND version: 5.0.4
 * Environment variables to enable sidechain node metrics
 
