@@ -1,4 +1,9 @@
 # Changelog
+**1.4.0+3**
+* ZEND version: 5.0.5
+
+**1.4.0+2**
+* Mainchain seeds updated
 
 **1.4.0+1**
 * ZEND version: 5.0.4
