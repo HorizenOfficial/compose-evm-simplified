@@ -16,12 +16,12 @@ if [ "${LOCAL_USER_ID}" == 0 ] || [ "${LOCAL_GROUP_ID}" == 0 ]; then
 fi
 
 echo -e "\n\033[1mWhat kind of node type would you like to run: \033[0m"
-select role_value in rpc forger; do
+select role_value in rpc forger dumper; do
   if [ -n "${role_value}" ]; then
     echo -e "\nYou have selected: \033[1m${role_value}\033[0m"
     break
   else
-    echo -e "\n\033[1mInvalid selection. Please type 1, or 2.\033[0m\n"
+    echo -e "\n\033[1mInvalid selection. Please type 1, 2 or 3.\033[0m\n"
   fi
 done
 
@@ -145,7 +145,7 @@ if ! [ -f "${ENV_FILE}" ]; then
   fi
   sed -i "s/SCNODE_USER_ID=.*/SCNODE_USER_ID=${LOCAL_USER_ID}/g" "${ENV_FILE}"
   sed -i "s/SCNODE_GRP_ID=.*/SCNODE_GRP_ID=${LOCAL_GROUP_ID}/g" "${ENV_FILE}"
-  if [ "${role_value}" = "forger" ]; then
+  if [ "${role_value}" = "forger" ] || [ "${role_value}" = "dumper" ]; then
     sed -i "s/ZEN_LOCAL_USER_ID=.*/ZEN_LOCAL_USER_ID=${LOCAL_USER_ID}/g" "${ENV_FILE}"
     sed -i "s/ZEN_LOCAL_GRP_ID=.*/ZEN_LOCAL_GRP_ID=${LOCAL_GROUP_ID}/g" "${ENV_FILE}"
   fi
@@ -178,7 +178,7 @@ COMPOSE_FILE="${ROOT_DIR}/compose_files/docker-compose-${role_value}.yml"
 SYMLINK_COMPOSE_FILE="${DEPLOYMENT_DIR}/docker-compose.yml"
 ln -sf "${COMPOSE_FILE}" "${SYMLINK_COMPOSE_FILE}"
 
-if [ "${role_value}" = "forger" ]; then
+if [ "${role_value}" = "forger" ] || [ "${role_value}" = "dumper" ]; then
   DOWNLOAD_SEED_FILE="${ROOT_DIR}/scripts/forger/seed/download_seed.sh"
   SYMLINK_SEED_DOWNLOAD_FILE="${DEPLOYMENT_DIR}/scripts/download_seed.sh"
   SEED_FILE="${ROOT_DIR}/scripts/forger/seed/seed.sh"
@@ -198,7 +198,7 @@ if [ "${role_value}" = "forger" ]; then
 
   echo -e "\n\033[1m=== Project has been initialized correctly for ${role_value} and ${network_value} ===\033[0m"
 
-  echo -e "\n\033[1m=== RUNNING FORGER NODE ===\033[0m\n"
+  echo -e "\n\033[1m=== RUNNING ${role_value^^} NODE ===\033[0m\n"
 
   echo -e "1. First, run the zend node:"
 
