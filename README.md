@@ -16,7 +16,7 @@ This repository contains all the resources for deploying a forger or rpc EVM sid
 
 1. [Rpc node](./docs/RPC.md)
 2. [Forger node](./docs/FORGER.md)
-3. [Migration](./MIGRATION.md)
+3. [Migration](./docs/MIGRATION.md)
 
 ---
 
