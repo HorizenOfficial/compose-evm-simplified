@@ -200,7 +200,7 @@ if [[ "${role_value}" =~ ^(forger|migration)$ ]]; then
   
   echo -e "\n\033[1m=== RUNNING ${role_value} NODE ===\033[0m\n"
 
-  echo -e "0. (Optional Step) Download the ZEND seed into ${DEPLOYMENT_DIR}/${role_value}/${network_value}/seed/ folder\n"
+  echo -e "0. (Optional Step) Download the ZEND seed into ${DEPLOYMENT_DIR}/seed/ folder\n"
 
   echo -e "1. First, run the zend node:"
 
