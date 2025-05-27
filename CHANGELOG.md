@@ -1,4 +1,7 @@
 # Changelog
+**1.4.0+5**
+* ZEND version: 5.0.7
+
 **1.4.0+4**
 * ZEND version: 5.0.6
 
