@@ -33,7 +33,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 ### Manually
 
-- Find the seed file url in `deployments/forger/[eon]/.env` file under the `ZEN_SEED_TAR_GZ_URL` variable.
+- Find the seed file url in `deployments/forger/eon/.env` file under the `ZEN_SEED_TAR_GZ_URL` variable.
 - Download the seed file and extract it into the `deployments/forger/eon/seed` directory.
 
 ### Using the download_seed.sh script
