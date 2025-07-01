@@ -1,4 +1,9 @@
 # Changelog
+**1.5.0**
+* ZEND version: 6.0.0
+* EON version 1.5.0
+* Remove gobi from forger guide
+
 **1.4.0+5**
 * ZEND version: 5.0.7
 

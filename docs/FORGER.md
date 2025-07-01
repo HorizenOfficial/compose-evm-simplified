@@ -2,7 +2,7 @@
 
 ## Setup
 
-Run the init.sh script to initialize the deployment for the first time. Select **forger** node and the **network** to run (eon or gobi).
+Run the init.sh script to initialize the deployment for the first time. Select **forger** node and the **network** to run eon.
 
 ```shell
 ./scripts/init.sh
@@ -23,24 +23,24 @@ The script will be run if the following conditions are met:
 
 - If **blocks** and **chainstate** directories exists in the **seed** directory and are not empty, the script will attempt to run the seed process.
 - If **blocks** or **chainstate** directories or the **.seed.complete** file exist in the node's datadir, the seed process will not be run.
-- If `ZEN_FORCE_RESEED` is set to `true` in the `deployments/forger/[eon|gobi]/.env` file, the seed process will be run regardless of the previous condition 
+- If `ZEN_FORCE_RESEED` is set to `true` in the `deployments/forger/eon/.env` file, the seed process will be run regardless of the previous condition
 (this will remove the **.seed.complete** file and **blocks** and **chainstate** directories, and force the seed process to be run)
 
 Once the seed process has been run successfully at least once a **.seed.complete** file will be created in the seed directory to prevent the seed process to be run again.
 
-The **blocks** and **chainstate** directories can be added to the `deployments/forger/[eon|gobi]/seed` directory either manually or running the [download_seed.sh](../scripts/forger/seed/download_seed.sh) script.
+The **blocks** and **chainstate** directories can be added to the `deployments/forger/eon/seed` directory either manually or running the [download_seed.sh](../scripts/forger/seed/download_seed.sh) script.
 This directory will be mounted into the zend container and used to seed the node.
 
 ### Manually
 
-- Find the seed file url in `deployments/forger/[eon|gobi]/.env` file under the `ZEN_SEED_TAR_GZ_URL` variable.
-- Download the seed file and extract it into the `deployments/forger/[eon|gobi]/seed` directory.
+- Find the seed file url in `deployments/forger/[eon]/.env` file under the `ZEN_SEED_TAR_GZ_URL` variable.
+- Download the seed file and extract it into the `deployments/forger/eon/seed` directory.
 
 ### Using the download_seed.sh script
 
-- Run the following command to download and extract the seed file into `deployments/forger/[eon|gobi]/seed` directory:
+- Run the following command to download and extract the seed file into `deployments/forger/eon/seed` directory:
     ```shell
-    ./deployments/forger/[eon|gobi]/scripts/download_seed.sh
+    ./deployments/forger/eon/scripts/download_seed.sh
     ```
 
 --- 
@@ -53,22 +53,22 @@ This directory will be mounted into the zend container and used to seed the node
 
 2. Run the zend node and let it sync (only required the first time the stack is started):
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d zend
+    docker compose -f deployments/forger/eon/docker-compose.yml up -d zend
     ```
 
 3. Verify if zend node is fully synced by running the following command and comparing the output with the current block height in the mainchain: https://explorer.horizen.io or https://explorer-testnet.horizen.io:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec zend gosu user zen-cli getblockcount
+    docker compose -f deployments/forger/eon/docker-compose.yml exec zend gosu user zen-cli getblockcount
     ```
 
 4. Once the zend node is fully synced, run the evmapp node:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d
+    docker compose -f deployments/forger/eon/docker-compose.yml up -d
     ```
    
-5. Verify if the evmapp node is fully synced by running the following command and comparing the output with the current block height in the sidechain: https://eon-explorer.horizenlabs.io or https://gobi-explorer.horizenlabs.io:
+5. Verify if the evmapp node is fully synced by running the following command and comparing the output with the current block height in the sidechain: https://eon-explorer.horizenlabs.io :
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/block/best" -H "accept: application/json" | jq '.result.height''
+    docker compose -f deployments/forger/eon/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/block/best" -H "accept: application/json" | jq '.result.height''
     ```
 
 6. Once the evmapp node is fully synced, generate the keys required to run a forger node:
@@ -96,7 +96,7 @@ This directory will be mounted into the zend container and used to seed the node
 
 8. Verify that the keys were generated correctly by running the following command:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/allPublicKeys" -H "accept: application/json" -H "Content-Type: application/json"'
+    docker compose -f deployments/forger/eon/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/wallet/allPublicKeys" -H "accept: application/json" -H "Content-Type: application/json"'
     ```
 
 9. **IMPORTANT NOTE**
@@ -116,7 +116,7 @@ This directory will be mounted into the zend container and used to seed the node
     into the first stake assigned to the forger. For more information about the registration process, please refer to the 
     [EVM documentation](https://github.com/HorizenOfficial/eon/blob/1.4.0-RC1/doc/api/transaction/registerForger.md).
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/transaction/registerForger" -H "accept: application/json" -d <requestBody>'
+    docker compose -f deployments/forger/eon/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/transaction/registerForger" -H "accept: application/json" -d <requestBody>'
     
     # Request body example:
     {
@@ -160,21 +160,21 @@ Please follow these steps:
     ```
 3. Run the evmapp node:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d evmapp
+    docker compose -f deployments/forger/eon/docker-compose.yml up -d evmapp
     ```
 4. Follow steps 6-9 from the previous section to generate the keys. This will generate exactly the same keys, as the wallet seed phrase is the same.
 5. Stop the evmapp node:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml stop evmapp
+    docker compose -f deployments/forger/eon/docker-compose.yml stop evmapp
     ```
 6. Undo the changes made in step 2.
 7. Run the evmapp node:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d evmapp --force-recreate
+    docker compose -f deployments/forger/eon/docker-compose.yml up -d evmapp --force-recreate
     ```
-8. Verify if the evmapp node is fully synced by running the following command and comparing the output with the current block height in the sidechain: https://eon-explorer.horizenlabs.io or https://gobi-explorer.horizenlabs.io:
+8. Verify if the evmapp node is fully synced by running the following command and comparing the output with the current block height in the sidechain: https://eon-explorer.horizenlabs.io :
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/block/best" -H "accept: application/json" | jq '.result.height''
+    docker compose -f deployments/forger/eon/docker-compose.yml exec evmapp gosu user bash -c 'curl -sXPOST "http://127.0.0.1:${SCNODE_REST_PORT}/block/best" -H "accept: application/json" | jq '.result.height''
     ```
 
 --- 
@@ -183,19 +183,19 @@ Please follow these steps:
 
 - Run the following command to stop the stack:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml stop
+    docker compose -f deployments/forger/eon/docker-compose.yml stop
     ```
 - Run the following command to start the stack again:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml up -d
+    docker compose -f deployments/forger/eon/docker-compose.yml up -d
     ```
 - Run the following command to stop the stack and delete the containers:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml down
+    docker compose -f deployments/forger/eon/docker-compose.yml down
     ```
 - Run the following commands to destroy the stack, **this action will delete your wallet and all the data**:
     ```shell
-    docker compose -f deployments/forger/[eon|gobi]/docker-compose.yml down
+    docker compose -f deployments/forger/eon/docker-compose.yml down
     docker volume ls # List all the volumes
     docker volume rm [volume_name] # Remove the volumes related to your stack, these volumes are named after the stack name: [COMPOSE_PROJECT_NAME]_[volume-name]
     ```
