@@ -1,4 +1,7 @@
 # Changelog
+**1.5.0+1**
+* EON seeders deprecation
+
 **1.5.0**
 * ZEND version: 6.0.0
 * EON version 1.5.0

@@ -8,7 +8,7 @@ source "${ROOT_DIR}"/scripts/utils.sh
 verify_required_commands
 
 echo -e "\n\033[1mWhat kind of node type would you like to run: \033[0m"
-select role_value in rpc forger; do
+select role_value in rpc forger seeder; do
   if [ -n "${role_value}" ]; then
     echo -e "\nYou have selected: \033[1m${role_value}\033[0m"
     break
