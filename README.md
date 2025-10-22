@@ -1,3 +1,10 @@
+# ⚠️ Repository Archived – EON Deprecation Notice
+
+**This repository is no longer maintained.**  
+It has been **archived due to the deprecation of the Horizen EON chain**.  
+No further updates, support, or deployments will be provided.
+
+---
 # Compose EVM Simplified
 
 This repository contains all the resources for deploying a forger or rpc EVM sidechain node on mainnet or testnet.
